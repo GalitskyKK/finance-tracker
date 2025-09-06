@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react"
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -7,62 +7,70 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
-} from 'recharts';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { formatCurrency } from '@/utils/formatters';
+  Legend
+} from "recharts"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
+import { formatCurrency } from "@/utils/formatters"
 
 interface LineChartData {
-  name: string;
-  income?: number;
-  expense?: number;
-  balance?: number;
-  [key: string]: any;
+  name: string
+  income?: number
+  expense?: number
+  balance?: number
+  [key: string]: string | number | undefined
 }
 
 interface LineChartProps {
-  data: LineChartData[];
-  title: string;
-  className?: string;
-  height?: number;
-  showLegend?: boolean;
-  showTooltip?: boolean;
+  data: LineChartData[]
+  title: string
+  className?: string
+  height?: number
+  showLegend?: boolean
+  showTooltip?: boolean
   lines?: Array<{
-    dataKey: string;
-    color: string;
-    name: string;
-  }>;
+    dataKey: string
+    color: string
+    name: string
+  }>
 }
 
 export const LineChart: React.FC<LineChartProps> = ({
   data,
   title,
-  className = '',
+  className = "",
   height = 300,
   showLegend = true,
   showTooltip = true,
   lines = [
-    { dataKey: 'income', color: '#10B981', name: 'Доходы' },
-    { dataKey: 'expense', color: '#EF4444', name: 'Расходы' },
-    { dataKey: 'balance', color: '#3B82F6', name: 'Баланс' },
-  ],
+    { dataKey: "income", color: "#10B981", name: "Доходы" },
+    { dataKey: "expense", color: "#EF4444", name: "Расходы" },
+    { dataKey: "balance", color: "#3B82F6", name: "Баланс" }
+  ]
 }) => {
   // Кастомный tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label
+  }: {
+    active?: boolean
+    payload?: Array<{ color: string; name: string; value: number }>
+    label?: string
+  }): React.ReactElement | null => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-medium text-gray-900 mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: { color: string; name: string; value: number }, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: <span className="font-semibold">{formatCurrency(entry.value)}</span>
             </p>
           ))}
         </div>
-      );
+      )
     }
-    return null;
-  };
+    return null
+  }
 
   if (!data || data.length === 0) {
     return (
@@ -90,7 +98,7 @@ export const LineChart: React.FC<LineChartProps> = ({
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -103,7 +111,11 @@ export const LineChart: React.FC<LineChartProps> = ({
           <RechartsLineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="name" stroke="#666" fontSize={12} />
-            <YAxis stroke="#666" fontSize={12} tickFormatter={(value) => formatCurrency(value)} />
+            <YAxis
+              stroke="#666"
+              fontSize={12}
+              tickFormatter={(value: number) => formatCurrency(value)}
+            />
             {showTooltip && <Tooltip content={<CustomTooltip />} />}
             {showLegend && <Legend />}
             {lines.map((line) => (
@@ -122,5 +134,5 @@ export const LineChart: React.FC<LineChartProps> = ({
         </ResponsiveContainer>
       </CardContent>
     </Card>
-  );
-};
+  )
+}

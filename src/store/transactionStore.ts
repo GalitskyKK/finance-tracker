@@ -1,92 +1,95 @@
-import { create } from 'zustand';
-import { Transaction, CreateTransactionData } from '@/types';
-import { STORAGE_KEYS } from '@/utils/constants';
+import { create } from "zustand"
+import { Transaction, CreateTransactionData } from "@/types"
+import { STORAGE_KEYS } from "@/utils/constants"
 
 interface TransactionState {
-  transactions: Transaction[];
-  loading: boolean;
-  error: string | null;
+  transactions: Transaction[]
+  loading: boolean
+  error: string | null
 
   // Actions
-  setTransactions: (transactions: Transaction[]) => void;
-  addTransaction: (transaction: CreateTransactionData) => void;
-  updateTransaction: (id: string, updates: Partial<CreateTransactionData>) => void;
-  deleteTransaction: (id: string) => void;
-  clearError: () => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string) => void;
+  setTransactions: (transactions: Transaction[]) => void
+  addTransaction: (transaction: CreateTransactionData) => void
+  updateTransaction: (id: string, updates: Partial<CreateTransactionData>) => void
+  deleteTransaction: (id: string) => void
+  clearError: () => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string) => void
 }
 
 // Функция для загрузки данных из localStorage
 const loadTransactionsFromStorage = (): Transaction[] => {
   try {
-    const saved = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
+    const saved = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS)
     if (saved) {
-      const parsed = JSON.parse(saved);
-      // Убеждаемся, что amount является числом
-      return parsed.map((transaction: any) => ({
-        ...transaction,
-        amount: Number(transaction.amount),
-      }));
+      const parsed: unknown = JSON.parse(saved)
+      // Проверяем, что parsed является массивом
+      if (Array.isArray(parsed)) {
+        // Убеждаемся, что amount является числом
+        return parsed.map((transaction: Transaction) => ({
+          ...transaction,
+          amount: Number(transaction.amount)
+        }))
+      }
     }
-  } catch (error) {
-    console.error('Ошибка при загрузке транзакций из localStorage:', error);
+  } catch (_error) {
+    // Ошибка при загрузке транзакций - возвращаем пустой массив
   }
-  return [];
-};
+  return []
+}
 
 export const useTransactionStore = create<TransactionState>((set, get) => ({
   transactions: loadTransactionsFromStorage(),
   loading: false,
   error: null,
 
-  setTransactions: (transactions) => {
+  setTransactions: (transactions: Transaction[]): void => {
     // Убеждаемся, что amount является числом
     const processedTransactions = transactions.map((transaction) => ({
       ...transaction,
-      amount: Number(transaction.amount),
-    }));
+      amount: Number(transaction.amount)
+    }))
 
-    set({ transactions: processedTransactions });
-    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(processedTransactions));
+    set({ transactions: processedTransactions })
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(processedTransactions))
   },
 
-  addTransaction: (transactionData) => {
+  addTransaction: (transactionData: CreateTransactionData): void => {
     const newTransaction: Transaction = {
       ...transactionData,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      updatedAt: new Date().toISOString()
+    }
 
-    const { transactions } = get();
-    const updatedTransactions = [newTransaction, ...transactions];
+    const { transactions } = get()
+    const updatedTransactions = [newTransaction, ...transactions]
 
-    set({ transactions: updatedTransactions });
-    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(updatedTransactions));
+    set({ transactions: updatedTransactions })
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(updatedTransactions))
   },
 
-  updateTransaction: (id, updates) => {
-    const { transactions } = get();
+  updateTransaction: (id: string, updates: Partial<CreateTransactionData>): void => {
+    const { transactions } = get()
     const updatedTransactions = transactions.map((transaction) =>
       transaction.id === id
         ? { ...transaction, ...updates, updatedAt: new Date().toISOString() }
-        : transaction,
-    );
+        : transaction
+    )
 
-    set({ transactions: updatedTransactions });
-    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(updatedTransactions));
+    set({ transactions: updatedTransactions })
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(updatedTransactions))
   },
 
-  deleteTransaction: (id) => {
-    const { transactions } = get();
-    const updatedTransactions = transactions.filter((transaction) => transaction.id !== id);
+  deleteTransaction: (id: string): void => {
+    const { transactions } = get()
+    const updatedTransactions = transactions.filter((transaction) => transaction.id !== id)
 
-    set({ transactions: updatedTransactions });
-    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(updatedTransactions));
+    set({ transactions: updatedTransactions })
+    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(updatedTransactions))
   },
 
-  clearError: () => set({ error: null }),
-  setLoading: (loading) => set({ loading }),
-  setError: (error) => set({ error }),
-}));
+  clearError: (): void => set({ error: null }),
+  setLoading: (loading: boolean): void => set({ loading }),
+  setError: (error: string): void => set({ error })
+}))

@@ -1,30 +1,30 @@
-import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { useTransactionStore } from '@/store/transactionStore';
-import { useCategoryStore } from '@/store/categoryStore';
-import { CreateTransactionData } from '@/types';
-import { validateAmount, validateDescription, validateDate } from '@/utils/validators';
-import { formatDateForInput } from '@/utils/formatters';
+import React from "react"
+import { useForm, Controller } from "react-hook-form"
+import { Button } from "@/components/ui/Button"
+import { Input } from "@/components/ui/Input"
+import { Select } from "@/components/ui/Select"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
+import { useTransactionStore } from "@/store/transactionStore"
+import { useCategoryStore } from "@/store/categoryStore"
+import { CreateTransactionData } from "@/types"
+import { validateAmount, validateDescription, validateDate } from "@/utils/validators"
+import { formatDateForInput } from "@/utils/formatters"
 
 interface TransactionFormProps {
-  onSuccess?: () => void;
-  initialData?: Partial<CreateTransactionData>;
-  isEditing?: boolean;
-  transactionId?: string;
+  onSuccess?: () => void
+  initialData?: Partial<CreateTransactionData>
+  isEditing?: boolean
+  transactionId?: string
 }
 
 export const TransactionForm: React.FC<TransactionFormProps> = ({
   onSuccess,
   initialData,
   isEditing = false,
-  transactionId,
+  transactionId
 }) => {
-  const { addTransaction, updateTransaction, loading } = useTransactionStore();
-  const { getCategoriesByType } = useCategoryStore();
+  const { addTransaction, updateTransaction, loading } = useTransactionStore()
+  const { getCategoriesByType } = useCategoryStore()
 
   const {
     handleSubmit,
@@ -32,57 +32,58 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     control,
     formState: { errors },
     reset,
-    setValue,
+    setValue
   } = useForm<CreateTransactionData>({
     defaultValues: {
       amount: initialData?.amount || 0,
-      type: initialData?.type || 'expense',
-      categoryId: initialData?.categoryId || '',
-      description: initialData?.description || '',
-      date: initialData?.date || formatDateForInput(new Date().toISOString()),
-    },
-  });
+      type: initialData?.type || "expense",
+      categoryId: initialData?.categoryId || "",
+      description: initialData?.description || "",
+      date: initialData?.date || formatDateForInput(new Date().toISOString())
+    }
+  })
 
-  const selectedType = watch('type');
-  const availableCategories = getCategoriesByType(selectedType);
+  const selectedType = watch("type")
+  const availableCategories = getCategoriesByType(selectedType)
 
   const categoryOptions = availableCategories.map((category) => ({
     value: category.id,
     label: category.name,
     color: category.color,
-    icon: category.icon,
-  }));
+    icon: category.icon
+  }))
 
   const onSubmit = async (data: CreateTransactionData) => {
     try {
       // Преобразуем amount в число
       const processedData = {
         ...data,
-        amount: Number(data.amount),
-      };
-
-      if (isEditing && transactionId) {
-        updateTransaction(transactionId, processedData);
-      } else {
-        addTransaction(processedData);
+        amount: Number(data.amount)
       }
 
-      reset();
-      onSuccess?.();
-    } catch (error) {
-      console.error('Ошибка при сохранении транзакции:', error);
-    }
-  };
+      if (isEditing && transactionId) {
+        updateTransaction(transactionId, processedData)
+      } else {
+        addTransaction(processedData)
+      }
 
-  const handleTypeChange = (type: 'income' | 'expense') => {
-    setValue('type', type);
-    setValue('categoryId', ''); // Сбрасываем категорию при смене типа
-  };
+      reset()
+      onSuccess?.()
+    } catch (_error) {
+      // TODO: Добавить toast уведомление об ошибке
+      // console.error('Ошибка при сохранении транзакции:', error);
+    }
+  }
+
+  const handleTypeChange = (type: "income" | "expense") => {
+    setValue("type", type)
+    setValue("categoryId", "") // Сбрасываем категорию при смене типа
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isEditing ? 'Редактировать транзакцию' : 'Добавить транзакцию'}</CardTitle>
+        <CardTitle>{isEditing ? "Редактировать транзакцию" : "Добавить транзакцию"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -92,15 +93,15 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             <div className="flex space-x-4">
               <Button
                 type="button"
-                variant={selectedType === 'expense' ? 'primary' : 'secondary'}
-                onClick={() => handleTypeChange('expense')}
+                variant={selectedType === "expense" ? "primary" : "secondary"}
+                onClick={() => handleTypeChange("expense")}
                 className="flex-1">
                 Расход
               </Button>
               <Button
                 type="button"
-                variant={selectedType === 'income' ? 'success' : 'secondary'}
-                onClick={() => handleTypeChange('income')}
+                variant={selectedType === "income" ? "success" : "secondary"}
+                onClick={() => handleTypeChange("income")}
                 className="flex-1">
                 Доход
               </Button>
@@ -112,8 +113,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             name="amount"
             control={control}
             rules={{
-              required: 'Сумма обязательна',
-              validate: validateAmount,
+              required: "Сумма обязательна",
+              validate: validateAmount
             }}
             render={({ field }) => (
               <Input
@@ -132,7 +133,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           <Controller
             name="categoryId"
             control={control}
-            rules={{ required: 'Выберите категорию' }}
+            rules={{ required: "Выберите категорию" }}
             render={({ field }) => (
               <Select
                 {...field}
@@ -149,8 +150,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             name="description"
             control={control}
             rules={{
-              required: 'Описание обязательно',
-              validate: validateDescription,
+              required: "Описание обязательно",
+              validate: validateDescription
             }}
             render={({ field }) => (
               <Input
@@ -168,8 +169,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             name="date"
             control={control}
             rules={{
-              required: 'Дата обязательна',
-              validate: validateDate,
+              required: "Дата обязательна",
+              validate: validateDate
             }}
             render={({ field }) => (
               <Input {...field} type="date" label="Дата" error={errors.date?.message} />
@@ -179,7 +180,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           {/* Кнопки */}
           <div className="flex space-x-4 pt-4">
             <Button type="submit" variant="primary" loading={loading} className="flex-1">
-              {isEditing ? 'Сохранить изменения' : 'Добавить транзакцию'}
+              {isEditing ? "Сохранить изменения" : "Добавить транзакцию"}
             </Button>
             <Button type="button" variant="secondary" onClick={() => reset()} className="flex-1">
               Сбросить
@@ -188,5 +189,5 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         </form>
       </CardContent>
     </Card>
-  );
-};
+  )
+}

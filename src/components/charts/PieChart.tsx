@@ -1,37 +1,47 @@
-import React from 'react';
+import React from "react"
 import {
   PieChart as RechartsPieChart,
   Pie,
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend,
-} from 'recharts';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { ChartData } from '@/types';
-import { formatCurrency } from '@/utils/formatters';
+  Legend
+} from "recharts"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
+import { ChartData } from "@/types"
+import { formatCurrency } from "@/utils/formatters"
 
 interface PieChartProps {
-  data: ChartData[];
-  title: string;
-  className?: string;
-  height?: number;
-  showLegend?: boolean;
-  showTooltip?: boolean;
+  data: ChartData[]
+  title: string
+  className?: string
+  height?: number
+  showLegend?: boolean
+  showTooltip?: boolean
 }
 
 export const PieChart: React.FC<PieChartProps> = ({
   data,
   title,
-  className = '',
+  className = "",
   height = 300,
   showLegend = true,
-  showTooltip = true,
+  showTooltip = true
 }) => {
   // Кастомный tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload
+  }: {
+    active?: boolean
+    payload?: Array<{
+      name: string
+      value: number
+      payload: { percent: number }
+    }>
+  }): React.ReactElement | null => {
     if (active && payload && payload.length) {
-      const data = payload[0];
+      const data = payload[0]
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-medium text-gray-900">{data.name}</p>
@@ -42,31 +52,38 @@ export const PieChart: React.FC<PieChartProps> = ({
             Процент: <span className="font-semibold">{data.payload.percent.toFixed(1)}%</span>
           </p>
         </div>
-      );
+      )
     }
-    return null;
-  };
+    return null
+  }
 
   // Кастомная легенда
-  const renderCustomizedLabel = (entry: any) => {
-    const RADIAN = Math.PI / 180;
-    const radius = entry.innerRadius + (entry.outerRadius - entry.innerRadius) * 0.5;
-    const x = entry.cx + radius * Math.cos(-entry.midAngle * RADIAN);
-    const y = entry.cy + radius * Math.sin(-entry.midAngle * RADIAN);
+  const renderCustomizedLabel = (entry: {
+    innerRadius: number
+    outerRadius: number
+    cx: number
+    cy: number
+    midAngle: number
+    percent: number
+  }): React.ReactElement => {
+    const RADIAN = Math.PI / 180
+    const radius = entry.innerRadius + (entry.outerRadius - entry.innerRadius) * 0.5
+    const x = entry.cx + radius * Math.cos(-entry.midAngle * RADIAN)
+    const y = entry.cy + radius * Math.sin(-entry.midAngle * RADIAN)
 
     return (
       <text
         x={x}
         y={y}
         fill="white"
-        textAnchor={x > entry.cx ? 'start' : 'end'}
+        textAnchor={x > entry.cx ? "start" : "end"}
         dominantBaseline="central"
         fontSize={12}
         fontWeight="bold">
-        {entry.percent > 5 ? `${entry.percent.toFixed(0)}%` : ''}
+        {entry.percent > 5 ? `${entry.percent.toFixed(0)}%` : ""}
       </text>
-    );
-  };
+    )
+  }
 
   if (!data || data.length === 0) {
     return (
@@ -94,7 +111,7 @@ export const PieChart: React.FC<PieChartProps> = ({
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -123,7 +140,7 @@ export const PieChart: React.FC<PieChartProps> = ({
               <Legend
                 verticalAlign="bottom"
                 height={36}
-                formatter={(value, entry: any) => (
+                formatter={(value: string, entry: { color: string }) => (
                   <span style={{ color: entry.color }}>{value}</span>
                 )}
               />
@@ -132,5 +149,5 @@ export const PieChart: React.FC<PieChartProps> = ({
         </ResponsiveContainer>
       </CardContent>
     </Card>
-  );
-};
+  )
+}

@@ -1,110 +1,110 @@
-import React, { useState, useMemo } from 'react';
-import { Edit, Trash2, Plus, Filter, X } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Modal } from '@/components/ui/Modal';
-import { TransactionForm } from '@/components/forms/TransactionForm';
-import { useTransactionStore } from '@/store/transactionStore';
-import { useCategoryStore } from '@/store/categoryStore';
-import { Transaction, FilterOptions } from '@/types';
-import { formatDate, formatAmountWithSign } from '@/utils/formatters';
+import React, { useState, useMemo } from "react"
+import { Edit, Trash2, Plus, Filter, X } from "lucide-react"
+import { Button } from "@/components/ui/Button"
+import { Input } from "@/components/ui/Input"
+import { Select } from "@/components/ui/Select"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
+import { Modal } from "@/components/ui/Modal"
+import { TransactionForm } from "@/components/forms/TransactionForm"
+import { useTransactionStore } from "@/store/transactionStore"
+import { useCategoryStore } from "@/store/categoryStore"
+import { Transaction, FilterOptions } from "@/types"
+import { formatDate, formatAmountWithSign } from "@/utils/formatters"
 
 interface TransactionListProps {
-  className?: string;
+  className?: string
 }
 
-export const TransactionList: React.FC<TransactionListProps> = ({ className = '' }) => {
-  const { transactions, deleteTransaction } = useTransactionStore();
-  const { categories, getCategoryById } = useCategoryStore();
+export const TransactionList: React.FC<TransactionListProps> = ({ className = "" }) => {
+  const { transactions, deleteTransaction } = useTransactionStore()
+  const { categories, getCategoryById } = useCategoryStore()
 
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<FilterOptions>({
-    type: 'all',
-    categoryId: '',
-    dateFrom: '',
-    dateTo: '',
-  });
+    type: "all",
+    categoryId: "",
+    dateFrom: "",
+    dateTo: ""
+  })
 
   // Фильтрация транзакций
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
       // Фильтр по типу
-      if (filters.type && filters.type !== 'all' && transaction.type !== filters.type) {
-        return false;
+      if (filters.type && filters.type !== "all" && transaction.type !== filters.type) {
+        return false
       }
 
       // Фильтр по категории
       if (filters.categoryId && transaction.categoryId !== filters.categoryId) {
-        return false;
+        return false
       }
 
       // Фильтр по дате от
       if (filters.dateFrom && transaction.date < filters.dateFrom) {
-        return false;
+        return false
       }
 
       // Фильтр по дате до
       if (filters.dateTo && transaction.date > filters.dateTo) {
-        return false;
+        return false
       }
 
-      return true;
-    });
-  }, [transactions, filters]);
+      return true
+    })
+  }, [transactions, filters])
 
   // Сортировка по дате (новые сверху)
   const sortedTransactions = useMemo(() => {
     return [...filteredTransactions].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-  }, [filteredTransactions]);
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
+  }, [filteredTransactions])
 
   const handleDeleteTransaction = (id: string) => {
-    if (window.confirm('Вы уверены, что хотите удалить эту транзакцию?')) {
-      deleteTransaction(id);
+    if (window.confirm("Вы уверены, что хотите удалить эту транзакцию?")) {
+      deleteTransaction(id)
     }
-  };
+  }
 
   const handleEditTransaction = (transaction: Transaction) => {
-    setEditingTransaction(transaction);
-  };
+    setEditingTransaction(transaction)
+  }
 
   const handleCloseModals = () => {
-    setShowAddModal(false);
-    setEditingTransaction(null);
-  };
+    setShowAddModal(false)
+    setEditingTransaction(null)
+  }
 
   const clearFilters = () => {
     setFilters({
-      type: 'all',
-      categoryId: '',
-      dateFrom: '',
-      dateTo: '',
-    });
-  };
+      type: "all",
+      categoryId: "",
+      dateFrom: "",
+      dateTo: ""
+    })
+  }
 
   const hasActiveFilters =
-    filters.type !== 'all' || filters.categoryId || filters.dateFrom || filters.dateTo;
+    filters.type !== "all" || filters.categoryId || filters.dateFrom || filters.dateTo
 
   // Опции для фильтров
   const typeOptions = [
-    { value: 'all', label: 'Все типы' },
-    { value: 'income', label: 'Доходы' },
-    { value: 'expense', label: 'Расходы' },
-  ];
+    { value: "all", label: "Все типы" },
+    { value: "income", label: "Доходы" },
+    { value: "expense", label: "Расходы" }
+  ]
 
   const categoryOptions = [
-    { value: '', label: 'Все категории' },
+    { value: "", label: "Все категории" },
     ...categories.map((category) => ({
       value: category.id,
       label: category.name,
-      color: category.color,
-    })),
-  ];
+      color: category.color
+    }))
+  ]
 
   return (
     <div className={className}>
@@ -117,7 +117,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ''
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className={showFilters ? 'bg-blue-100 text-blue-700' : ''}>
+                className={showFilters ? "bg-blue-100 text-blue-700" : ""}>
                 <Filter className="h-4 w-4 mr-2" />
                 Фильтры
                 {hasActiveFilters && (
@@ -152,7 +152,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ''
                 <Select
                   options={typeOptions}
                   value={filters.type}
-                  onChange={(value) => setFilters((prev) => ({ ...prev, type: value as any }))}
+                  onChange={(value) =>
+                    setFilters((prev) => ({ ...prev, type: value as "income" | "expense" | "" }))
+                  }
                   label="Тип"
                 />
 
@@ -198,12 +200,12 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ''
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {hasActiveFilters ? 'Нет транзакций по выбранным фильтрам' : 'Нет транзакций'}
+                {hasActiveFilters ? "Нет транзакций по выбранным фильтрам" : "Нет транзакций"}
               </h3>
               <p className="text-gray-500 mb-4">
                 {hasActiveFilters
-                  ? 'Попробуйте изменить параметры фильтрации'
-                  : 'Добавьте первую транзакцию, чтобы начать отслеживать финансы'}
+                  ? "Попробуйте изменить параметры фильтрации"
+                  : "Добавьте первую транзакцию, чтобы начать отслеживать финансы"}
               </p>
               {!hasActiveFilters && (
                 <Button variant="primary" onClick={() => setShowAddModal(true)}>
@@ -215,7 +217,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ''
           ) : (
             <div className="space-y-3">
               {sortedTransactions.map((transaction) => {
-                const category = getCategoryById(transaction.categoryId);
+                const category = getCategoryById(transaction.categoryId)
 
                 return (
                   <div
@@ -224,7 +226,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ''
                     <div className="flex items-center space-x-4">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                        style={{ backgroundColor: category?.color || '#6B7280' }}>
+                        style={{ backgroundColor: category?.color || "#6B7280" }}>
                         {category?.icon ? (
                           <span className="text-sm font-medium">
                             {category.name.charAt(0).toUpperCase()}
@@ -237,7 +239,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ''
                       <div>
                         <h4 className="font-medium text-gray-900">{transaction.description}</h4>
                         <div className="flex items-center space-x-2 text-sm text-gray-500">
-                          <span>{category?.name || 'Неизвестная категория'}</span>
+                          <span>{category?.name || "Неизвестная категория"}</span>
                           <span>•</span>
                           <span>{formatDate(transaction.date)}</span>
                         </div>
@@ -247,7 +249,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ''
                     <div className="flex items-center space-x-3">
                       <span
                         className={`font-semibold ${
-                          transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                          transaction.type === "income" ? "text-green-600" : "text-red-600"
                         }`}>
                         {formatAmountWithSign(transaction.amount, transaction.type)}
                       </span>
@@ -270,7 +272,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ''
                       </div>
                     </div>
                   </div>
-                );
+                )
               })}
             </div>
           )}
@@ -301,5 +303,5 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ''
         )}
       </Modal>
     </div>
-  );
-};
+  )
+}
