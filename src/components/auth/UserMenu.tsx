@@ -25,8 +25,7 @@ export const UserMenu: React.FC = () => {
     try {
       await signOut()
       setIsOpen(false)
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Sign out failed"
+    } catch (_error: unknown) {
       // Sign out error handled
     }
   }

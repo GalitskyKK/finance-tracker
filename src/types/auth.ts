@@ -1,18 +1,8 @@
-export interface AuthUser {
-  id: string
-  email: string
-  email_verified: boolean
-  phone?: string
-  created_at: string
-  last_sign_in_at?: string
-}
+import type { User as SupabaseUser, Session as SupabaseSession } from "@supabase/supabase-js"
 
-export interface Session {
-  access_token: string
-  refresh_token: string
-  expires_at: number
-  user: AuthUser
-}
+export type AuthUser = SupabaseUser
+
+export interface Session extends SupabaseSession {}
 
 export interface LoginCredentials {
   email: string

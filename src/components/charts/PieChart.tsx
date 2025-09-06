@@ -140,8 +140,8 @@ export const PieChart: React.FC<PieChartProps> = ({
               <Legend
                 verticalAlign="bottom"
                 height={36}
-                formatter={(value: string, entry: { color: string }) => (
-                  <span style={{ color: entry.color }}>{value}</span>
+                formatter={(value: string, entry: any) => (
+                  <span style={{ color: entry.color || "#000" }}>{value}</span>
                 )}
               />
             )}

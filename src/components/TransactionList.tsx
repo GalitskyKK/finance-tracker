@@ -153,7 +153,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
                   options={typeOptions}
                   value={filters.type}
                   onChange={(value) =>
-                    setFilters((prev) => ({ ...prev, type: value as "income" | "expense" | "" }))
+                    setFilters((prev) => ({
+                      ...prev,
+                      type: value === "" ? "all" : (value as "income" | "expense" | "all")
+                    }))
                   }
                   label="Тип"
                 />

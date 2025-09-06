@@ -3,15 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --primary: theme('colors.blue.500');
-  --primary-hover: theme('colors.blue.600');
-  --success: theme('colors.emerald.500');
-  --danger: theme('colors.red.500');
-  --warning: theme('colors.amber.500');
-  --neutral: theme('colors.gray.500');
-  --background: theme('colors.gray.50');
-  --card: theme('colors.white');
-  --border: theme('colors.gray.200');
+  --primary: theme("colors.blue.500");
+  --primary-hover: theme("colors.blue.600");
+  --success: theme("colors.emerald.500");
+  --danger: theme("colors.red.500");
+  --warning: theme("colors.amber.500");
+  --neutral: theme("colors.gray.500");
+  --background: theme("colors.gray.50");
+  --card: theme("colors.white");
+  --border: theme("colors.gray.200");
 }
 
 * {
@@ -20,8 +20,8 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--background);
@@ -29,4 +29,32 @@ body {
 
 #root {
   min-height: 100vh;
+}
+
+/* Auth page blob animations */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }
