@@ -28,9 +28,9 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackTo
       await resetPassword(data)
       setIsEmailSent(true)
       reset()
-    } catch (error) {
+    } catch (_error) {
       // Ошибка уже обработана в store
-      console.error("Password reset error:", error)
+      // Password reset error handled in store
     }
   }
 

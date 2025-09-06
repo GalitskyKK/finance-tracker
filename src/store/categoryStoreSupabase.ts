@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import type { Category, CreateCategoryData } from "@/types"
+import type { Category, CreateCategoryData, SupabaseCategoryRow } from "@/types"
 import { supabase } from "@/lib/supabase"
 
 interface CategoryState {
@@ -38,14 +38,16 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
       if (error) throw error
 
       // Преобразуем данные к нашему формату
-      const transformedCategories: Category[] = data.map((row) => ({
-        id: row.id,
-        name: row.name,
-        color: row.color,
-        icon: row.icon,
-        type: row.type as "income" | "expense",
-        isDefault: row.is_default
-      }))
+      const transformedCategories: Category[] = (data as SupabaseCategoryRow[]).map(
+        (row: SupabaseCategoryRow) => ({
+          id: row.id,
+          name: row.name,
+          color: row.color,
+          icon: row.icon,
+          type: row.type,
+          isDefault: row.is_default
+        })
+      )
 
       set({
         categories: transformedCategories,
@@ -53,7 +55,6 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to fetch categories"
-      console.error("Error fetching categories:", error)
       set({
         error: errorMessage,
         loading: false
@@ -65,9 +66,8 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser()
+      const result = await supabase.auth.getUser()
+      const { user } = result.data
       if (!user) throw new Error("User not authenticated")
 
       const { data, error } = await supabase
@@ -87,14 +87,16 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
 
       if (error) throw error
 
+      const categoryRow = data as SupabaseCategoryRow
+
       // Создаем объект категории в нашем формате
       const newCategory: Category = {
-        id: data.id,
-        name: data.name,
-        color: data.color,
-        icon: data.icon,
-        type: data.type as "income" | "expense",
-        isDefault: data.is_default
+        id: categoryRow.id,
+        name: categoryRow.name,
+        color: categoryRow.color,
+        icon: categoryRow.icon,
+        type: categoryRow.type,
+        isDefault: categoryRow.is_default
       }
 
       // Добавляем в локальное состояние
@@ -109,7 +111,6 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to add category"
-      console.error("Error adding category:", error)
       set({
         error: errorMessage,
         loading: false
@@ -138,6 +139,8 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
 
       if (error) throw error
 
+      const categoryRow = data as SupabaseCategoryRow
+
       // Обновляем локальное состояние
       const { categories } = get()
       const updatedCategories = categories
@@ -145,10 +148,10 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
           category.id === id
             ? {
                 ...category,
-                name: data.name || category.name,
-                color: data.color || category.color,
-                icon: data.icon || category.icon,
-                type: data.type || category.type
+                name: categoryRow.name ?? category.name,
+                color: categoryRow.color ?? category.color,
+                icon: categoryRow.icon ?? category.icon,
+                type: categoryRow.type ?? category.type
               }
             : category
         )
@@ -160,7 +163,6 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update category"
-      console.error("Error updating category:", error)
       set({
         error: errorMessage,
         loading: false
@@ -193,7 +195,6 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to delete category"
-      console.error("Error deleting category:", error)
       set({
         error: errorMessage,
         loading: false
@@ -270,10 +271,8 @@ export const initializeDefaultCategories = async (): Promise<void> => {
     )
 
     if (error) throw error
-
-    console.log("Default categories created successfully")
-  } catch (error) {
-    console.error("Error creating default categories:", error)
+  } catch (_error) {
+    // Silently fail if default categories can't be created
   }
 }
 
@@ -287,9 +286,7 @@ supabase
       schema: "public",
       table: "categories"
     },
-    (payload) => {
-      console.log("Category changed:", payload)
-
+    (_payload) => {
       // При изменениях извне - обновляем данные
       const store = useCategoryStoreSupabase.getState()
       if (!store.loading) {

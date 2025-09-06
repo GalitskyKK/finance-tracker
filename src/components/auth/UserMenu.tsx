@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import { User, LogOut, Settings, ChevronDown } from "lucide-react"
 import { useAuthStore } from "@/store/authStore"
-import { Button } from "@/components/ui/Button"
 
 export const UserMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -26,15 +25,16 @@ export const UserMenu: React.FC = () => {
     try {
       await signOut()
       setIsOpen(false)
-    } catch (error) {
-      console.error("Sign out error:", error)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Sign out failed"
+      // Sign out error handled
     }
   }
 
   if (!user) return null
 
-  const userName = user.user_metadata?.name || user.email?.split("@")[0] || "Пользователь"
-  const userEmail = user.email || ""
+  const userName = user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Пользователь"
+  const userEmail = user.email ?? ""
 
   return (
     <div className="relative" ref={menuRef}>
@@ -66,7 +66,7 @@ export const UserMenu: React.FC = () => {
               onClick={() => {
                 setIsOpen(false)
                 // TODO: Открыть модал настроек
-                console.log("Open settings")
+                // Open settings modal
               }}
               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
               <Settings className="w-4 h-4 mr-3 text-gray-500" />

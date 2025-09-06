@@ -27,9 +27,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, onForgotPass
       clearError()
       await signIn(data)
       reset()
-    } catch (error) {
+    } catch (_error) {
       // Ошибка уже обработана в store
-      console.error("Login error:", error)
+      // Login error handled in store
     }
   }
 

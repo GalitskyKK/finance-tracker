@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase"
 
 interface AuthStore extends AuthState, AuthActions {}
 
-export const useAuthStore = create<AuthStore>((set, get) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   session: null,
   loading: true, // Начинаем с true, пока не проверим сессию
@@ -170,19 +170,17 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 }))
 
 // Слушатель изменений состояния аутентификации
-supabase.auth.onAuthStateChange((event, session) => {
+supabase.auth.onAuthStateChange((_event, session) => {
   const state = useAuthStore.getState()
 
-  console.log("Auth state change:", event, session?.user?.email)
-
-  state.user = session?.user || null
+  state.user = session?.user ?? null
   state.session = session
   state.isAuthenticated = !!session
   state.loading = false
 
   // Обновляем store
   useAuthStore.setState({
-    user: session?.user || null,
+    user: session?.user ?? null,
     session: session,
     isAuthenticated: !!session,
     loading: false
@@ -200,13 +198,12 @@ const initializeAuth = async (): Promise<void> => {
     if (error) throw error
 
     useAuthStore.setState({
-      user: session?.user || null,
+      user: session?.user ?? null,
       session: session,
       isAuthenticated: !!session,
       loading: false
     })
   } catch (error) {
-    console.error("Error initializing auth:", error)
     useAuthStore.setState({
       loading: false,
       error: error instanceof Error ? error.message : "Failed to initialize auth"

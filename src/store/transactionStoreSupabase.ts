@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import type { Transaction, CreateTransactionData } from "@/types"
+import type { Transaction, CreateTransactionData, SupabaseTransactionRow } from "@/types"
 import { supabase } from "@/lib/supabase"
 
 interface TransactionState {
@@ -45,16 +45,18 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       if (error) throw error
 
       // Преобразуем данные к нашему формату
-      const transformedTransactions: Transaction[] = data.map((row) => ({
-        id: row.id,
-        amount: parseFloat(row.amount),
-        type: row.type as "income" | "expense",
-        categoryId: row.category_id,
-        description: row.description,
-        date: row.date,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      }))
+      const transformedTransactions: Transaction[] = (data as SupabaseTransactionRow[]).map(
+        (row: SupabaseTransactionRow) => ({
+          id: row.id,
+          amount: parseFloat(row.amount),
+          type: row.type,
+          categoryId: row.category_id,
+          description: row.description,
+          date: row.date,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at
+        })
+      )
 
       set({
         transactions: transformedTransactions,
@@ -62,7 +64,6 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to fetch transactions"
-      console.error("Error fetching transactions:", error)
       set({
         error: errorMessage,
         loading: false
@@ -74,9 +75,8 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
     set({ loading: true, error: null })
 
     try {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser()
+      const result = await supabase.auth.getUser()
+      const { user } = result.data
       if (!user) throw new Error("User not authenticated")
 
       const { data, error } = await supabase
@@ -96,16 +96,18 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
 
       if (error) throw error
 
+      const transactionRow = data as SupabaseTransactionRow
+
       // Создаем объект транзакции в нашем формате
       const newTransaction: Transaction = {
-        id: data.id,
-        amount: parseFloat(data.amount),
-        type: data.type as "income" | "expense",
-        categoryId: data.category_id,
-        description: data.description,
-        date: data.date,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
+        id: transactionRow.id,
+        amount: parseFloat(transactionRow.amount),
+        type: transactionRow.type,
+        categoryId: transactionRow.category_id,
+        description: transactionRow.description,
+        date: transactionRow.date,
+        createdAt: transactionRow.created_at,
+        updatedAt: transactionRow.updated_at
       }
 
       // Добавляем в локальное состояние
@@ -118,7 +120,6 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to add transaction"
-      console.error("Error adding transaction:", error)
       set({
         error: errorMessage,
         loading: false
@@ -148,18 +149,22 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
 
       if (error) throw error
 
+      const transactionRow = data as SupabaseTransactionRow
+
       // Обновляем локальное состояние
       const { transactions } = get()
       const updatedTransactions = transactions.map((transaction) =>
         transaction.id === id
           ? {
               ...transaction,
-              amount: data.amount ? parseFloat(data.amount) : transaction.amount,
-              type: data.type || transaction.type,
-              categoryId: data.category_id || transaction.categoryId,
-              description: data.description || transaction.description,
-              date: data.date || transaction.date,
-              updatedAt: data.updated_at
+              amount: transactionRow.amount
+                ? parseFloat(transactionRow.amount)
+                : transaction.amount,
+              type: transactionRow.type ?? transaction.type,
+              categoryId: transactionRow.category_id ?? transaction.categoryId,
+              description: transactionRow.description ?? transaction.description,
+              date: transactionRow.date ?? transaction.date,
+              updatedAt: transactionRow.updated_at
             }
           : transaction
       )
@@ -170,7 +175,6 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update transaction"
-      console.error("Error updating transaction:", error)
       set({
         error: errorMessage,
         loading: false
@@ -221,9 +225,7 @@ supabase
       schema: "public",
       table: "transactions"
     },
-    (payload) => {
-      console.log("Transaction changed:", payload)
-
+    (_payload) => {
       // При изменениях извне - обновляем данные
       const store = useTransactionStoreSupabase.getState()
       if (!store.loading) {

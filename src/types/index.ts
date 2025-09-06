@@ -14,6 +14,12 @@ export type {
   AuthError,
   OAuthProvider
 } from "./auth"
+export type {
+  SupabaseCategoryRow,
+  SupabaseTransactionRow,
+  SupabaseProfileRow,
+  SupabaseBudgetRow
+} from "./supabase"
 
 // Общие типы для UI
 export interface SelectOption {

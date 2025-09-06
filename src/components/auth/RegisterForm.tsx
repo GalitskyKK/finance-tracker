@@ -32,12 +32,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode }) => {
   const onSubmit = async (data: RegisterFormData): Promise<void> => {
     try {
       clearError()
-      const { confirmPassword, ...credentials } = data
+      const { confirmPassword: _confirmPassword, ...credentials } = data
       await signUp(credentials)
       reset()
-    } catch (error) {
+    } catch (_error) {
       // Ошибка уже обработана в store
-      console.error("Registration error:", error)
+      // Registration error handled in store
     }
   }
 

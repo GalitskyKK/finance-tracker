@@ -11,7 +11,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Логируем состояние для отладки
   useEffect(() => {
-    console.log("ProtectedRoute state:", { isAuthenticated, loading, user: user?.email })
+    // ProtectedRoute state logging
   }, [isAuthenticated, loading, user])
 
   // Показываем загрузку пока проверяем аутентификацию

@@ -29,7 +29,7 @@ export const AppWithMigration: React.FC = () => {
       }
 
       try {
-        console.log("Initializing data for user:", user.email)
+        // Initializing data for user
 
         // Загружаем категории и транзакции из Supabase
         await Promise.all([fetchCategories(), fetchTransactions()])
@@ -37,7 +37,7 @@ export const AppWithMigration: React.FC = () => {
         // Проверяем, есть ли данные в localStorage для миграции
         const localData = getDataStats()
         if (localData.hasData) {
-          console.log("Found local data, showing migration modal")
+          // Found local data, showing migration modal
           setShowMigrationModal(true)
         } else {
           // Если нет локальных данных - создаем дефолтные категории если их нет
@@ -46,8 +46,8 @@ export const AppWithMigration: React.FC = () => {
         }
 
         setIsInitialized(true)
-      } catch (error) {
-        console.error("Error initializing data:", error)
+      } catch (_error) {
+        // Error initializing data
         setIsInitialized(true)
       }
     }

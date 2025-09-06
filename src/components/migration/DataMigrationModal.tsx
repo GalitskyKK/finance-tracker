@@ -6,8 +6,7 @@ import {
   exportLocalStorageData,
   downloadDataBackup,
   getDataStats,
-  clearLocalStorageData,
-  type ExportedData
+  clearLocalStorageData
 } from "@/utils/dataExport"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import {
@@ -47,7 +46,7 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
       if (data) {
         downloadDataBackup(data)
       }
-    } catch (error) {
+    } catch (_error) {
       setError("Ошибка при создании резервной копии")
     }
   }
@@ -69,14 +68,14 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
         return
       }
 
-      console.log("Starting migration:", exportedData)
+      // Starting migration
 
       // Шаг 1: Инициализируем дефолтные категории
       await initializeDefaultCategories()
       await fetchCategories()
 
       // Шаг 2: Мигрируем кастомные категории
-      let migratedCategoriesCount = 0
+      let _migratedCategoriesCount = 0
       for (const category of exportedData.categories) {
         try {
           await addCategory({
@@ -85,9 +84,9 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
             icon: category.icon,
             type: category.type
           })
-          migratedCategoriesCount++
-        } catch (error) {
-          console.warn("Failed to migrate category:", category.name, error)
+          _migratedCategoriesCount++
+        } catch (_error) {
+          // Failed to migrate category - skip
         }
       }
 
@@ -95,7 +94,7 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
       await fetchCategories()
 
       // Шаг 3: Мигрируем транзакции
-      let migratedTransactionsCount = 0
+      let _migratedTransactionsCount = 0
       for (const transaction of exportedData.transactions) {
         try {
           await addTransaction({
@@ -105,22 +104,19 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
             description: transaction.description,
             date: transaction.date
           })
-          migratedTransactionsCount++
-        } catch (error) {
-          console.warn("Failed to migrate transaction:", transaction.id, error)
+          _migratedTransactionsCount++
+        } catch (_error) {
+          // Failed to migrate transaction - skip
         }
       }
 
-      console.log(
-        `Migration completed: ${migratedCategoriesCount} categories, ${migratedTransactionsCount} transactions`
-      )
+      // Migration completed successfully
 
       // Шаг 4: Очищаем localStorage после успешной миграции
       clearLocalStorageData()
 
       setStep("complete")
     } catch (error) {
-      console.error("Migration error:", error)
       setError(error instanceof Error ? error.message : "Ошибка при миграции данных")
     } finally {
       setLoading(false)
@@ -136,7 +132,7 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
       await fetchCategories()
 
       setStep("complete")
-    } catch (error) {
+    } catch (_error) {
       setError("Ошибка при создании дефолтных категорий")
     } finally {
       setLoading(false)
