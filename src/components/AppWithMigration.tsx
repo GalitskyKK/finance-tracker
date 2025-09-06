@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
+import React from "react"
 import { Layout } from "@/components/layout/Layout"
-import Dashboard from "@/pages/Dashboard"
-import Transactions from "@/pages/Transactions"
-import Analytics from "@/pages/Analytics"
 import { DataMigrationModal } from "@/components/migration/DataMigrationModal"
+
+// Lazy load страниц для code splitting
+const Dashboard = React.lazy(() => import("@/pages/Dashboard"))
+const Transactions = React.lazy(() => import("@/pages/Transactions"))
+const Analytics = React.lazy(() => import("@/pages/Analytics"))
 import { useAuthStore } from "@/store/authStore"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import {
@@ -65,11 +68,23 @@ export const AppWithMigration: React.FC = () => {
   const renderPage = (): JSX.Element => {
     switch (currentPage) {
       case "dashboard":
-        return <Dashboard />
+        return (
+          <Suspense fallback={<PageLoadingSpinner />}>
+            <Dashboard />
+          </Suspense>
+        )
       case "transactions":
-        return <Transactions />
+        return (
+          <Suspense fallback={<PageLoadingSpinner />}>
+            <Transactions />
+          </Suspense>
+        )
       case "analytics":
-        return <Analytics />
+        return (
+          <Suspense fallback={<PageLoadingSpinner />}>
+            <Analytics />
+          </Suspense>
+        )
       case "settings":
         return (
           <div className="text-center py-12">
@@ -78,9 +93,21 @@ export const AppWithMigration: React.FC = () => {
           </div>
         )
       default:
-        return <Dashboard />
+        return (
+          <Suspense fallback={<PageLoadingSpinner />}>
+            <Dashboard />
+          </Suspense>
+        )
     }
   }
+
+  // Компонент загрузки страницы
+  const PageLoadingSpinner = (): JSX.Element => (
+    <div className="flex items-center justify-center py-12">
+      <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+      <span className="ml-2 text-gray-600">Загрузка...</span>
+    </div>
+  )
 
   // Показываем загрузку пока не инициализированы
   if (isAuthenticated && !isInitialized) {
