@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, Suspense, useCallback } from "react"
 import React from "react"
 import { Layout } from "@/components/layout/Layout"
 import { DataMigrationModal } from "@/components/migration/DataMigrationModal"
@@ -27,7 +27,12 @@ export const AppWithMigration: React.FC = () => {
   // Инициализация данных после аутентификации
   useEffect(() => {
     const initializeData = async (): Promise<void> => {
-      if (!isAuthenticated || !user || authLoading || isInitialized) {
+      if (!isAuthenticated || !user || authLoading) {
+        return
+      }
+
+      // Предотвращаем повторную инициализацию
+      if (isInitialized) {
         return
       }
 
@@ -56,14 +61,14 @@ export const AppWithMigration: React.FC = () => {
     }
 
     initializeData()
-  }, [isAuthenticated, user, authLoading, isInitialized, fetchCategories, fetchTransactions])
+  }, [isAuthenticated, user, authLoading]) // Убираем isInitialized, fetchCategories, fetchTransactions из зависимостей
 
-  const handleMigrationClose = (): void => {
+  const handleMigrationClose = useCallback((): void => {
     setShowMigrationModal(false)
     // После закрытия модала миграции обновляем данные
     fetchCategories()
     fetchTransactions()
-  }
+  }, [])
 
   const renderPage = (): JSX.Element => {
     switch (currentPage) {
