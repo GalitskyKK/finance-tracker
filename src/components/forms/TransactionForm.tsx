@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Select } from "@/components/ui/Select"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
-import { useTransactionStore } from "@/store/transactionStore"
-import { useCategoryStore } from "@/store/categoryStore"
+import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
+import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
 import { CreateTransactionData } from "@/types"
 import { validateAmount, validateDescription, validateDate } from "@/utils/validators"
 import { formatDateForInput } from "@/utils/formatters"
@@ -23,8 +23,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   isEditing = false,
   transactionId
 }) => {
-  const { addTransaction, updateTransaction, loading } = useTransactionStore()
-  const { getCategoriesByType } = useCategoryStore()
+  const { addTransaction, updateTransaction, loading } = useTransactionStoreSupabase()
+  const { getCategoriesByType } = useCategoryStoreSupabase()
 
   const {
     handleSubmit,
@@ -62,9 +62,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       }
 
       if (isEditing && transactionId) {
-        updateTransaction(transactionId, processedData)
+        await updateTransaction(transactionId, processedData)
       } else {
-        addTransaction(processedData)
+        await addTransaction(processedData)
       }
 
       reset()

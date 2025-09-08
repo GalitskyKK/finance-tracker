@@ -6,8 +6,8 @@ import { Select } from "@/components/ui/Select"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
 import { Modal } from "@/components/ui/Modal"
 import { TransactionForm } from "@/components/forms/TransactionForm"
-import { useTransactionStore } from "@/store/transactionStore"
-import { useCategoryStore } from "@/store/categoryStore"
+import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
+import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
 import { Transaction, FilterOptions } from "@/types"
 import { formatDate, formatAmountWithSign } from "@/utils/formatters"
 
@@ -16,8 +16,8 @@ interface TransactionListProps {
 }
 
 export const TransactionList: React.FC<TransactionListProps> = ({ className = "" }) => {
-  const { transactions, deleteTransaction } = useTransactionStore()
-  const { categories, getCategoryById } = useCategoryStore()
+  const { transactions, deleteTransaction } = useTransactionStoreSupabase()
+  const { categories, getCategoryById } = useCategoryStoreSupabase()
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
@@ -63,9 +63,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
     )
   }, [filteredTransactions])
 
-  const handleDeleteTransaction = (id: string) => {
+  const handleDeleteTransaction = async (id: string) => {
     if (window.confirm("Вы уверены, что хотите удалить эту транзакцию?")) {
-      deleteTransaction(id)
+      try {
+        await deleteTransaction(id)
+      } catch (_error) {
+        // TODO: Добавить toast уведомление об ошибке
+      }
     }
   }
 

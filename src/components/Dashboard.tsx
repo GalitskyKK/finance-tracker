@@ -1,57 +1,57 @@
-import React, { useMemo } from 'react';
-import { TrendingUp, TrendingDown, Wallet, Target } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { useTransactionStore } from '@/store/transactionStore';
-import { formatCurrency } from '@/utils/formatters';
-import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import React, { useMemo } from "react"
+import { TrendingUp, TrendingDown, Wallet, Target } from "lucide-react"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
+import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
+import { formatCurrency } from "@/utils/formatters"
+import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
+import { ru } from "date-fns/locale"
 
 interface DashboardProps {
-  className?: string;
+  className?: string
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
-  const { transactions } = useTransactionStore();
+export const Dashboard: React.FC<DashboardProps> = ({ className = "" }) => {
+  const { transactions } = useTransactionStoreSupabase()
 
   // Вычисляем статистику
   const stats = useMemo(() => {
-    const now = new Date();
-    const startOfCurrentMonth = startOfMonth(now);
-    const endOfCurrentMonth = endOfMonth(now);
+    const now = new Date()
+    const startOfCurrentMonth = startOfMonth(now)
+    const endOfCurrentMonth = endOfMonth(now)
 
     // Все транзакции
     const totalIncome = transactions
-      .filter((t) => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0)
 
     const totalExpenses = transactions
-      .filter((t) => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + t.amount, 0)
 
-    const totalBalance = totalIncome - totalExpenses;
+    const totalBalance = totalIncome - totalExpenses
 
     // Транзакции за текущий месяц
     const currentMonthTransactions = transactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.date);
+      const transactionDate = new Date(transaction.date)
       return isWithinInterval(transactionDate, {
         start: startOfCurrentMonth,
-        end: endOfCurrentMonth,
-      });
-    });
+        end: endOfCurrentMonth
+      })
+    })
 
     const monthlyIncome = currentMonthTransactions
-      .filter((t) => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0)
 
     const monthlyExpenses = currentMonthTransactions
-      .filter((t) => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + t.amount, 0)
 
-    const monthlyBalance = monthlyIncome - monthlyExpenses;
+    const monthlyBalance = monthlyIncome - monthlyExpenses
 
     // Количество транзакций
-    const totalTransactions = transactions.length;
-    const monthlyTransactions = currentMonthTransactions.length;
+    const totalTransactions = transactions.length
+    const monthlyTransactions = currentMonthTransactions.length
 
     return {
       totalBalance,
@@ -61,27 +61,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
       monthlyIncome,
       monthlyExpenses,
       totalTransactions,
-      monthlyTransactions,
-    };
-  }, [transactions]);
+      monthlyTransactions
+    }
+  }, [transactions])
 
   const StatCard: React.FC<{
-    title: string;
-    value: string;
-    subtitle?: string;
-    icon: React.ReactNode;
-    color: 'green' | 'red' | 'blue' | 'purple';
+    title: string
+    value: string
+    subtitle?: string
+    icon: React.ReactNode
+    color: "green" | "red" | "blue" | "purple"
     trend?: {
-      value: number;
-      isPositive: boolean;
-    };
+      value: number
+      isPositive: boolean
+    }
   }> = ({ title, value, subtitle, icon, color, trend }) => {
     const colorClasses = {
-      green: 'bg-green-500 text-white',
-      red: 'bg-red-500 text-white',
-      blue: 'bg-blue-500 text-white',
-      purple: 'bg-purple-500 text-white',
-    };
+      green: "bg-green-500 text-white",
+      red: "bg-red-500 text-white",
+      blue: "bg-blue-500 text-white",
+      purple: "bg-purple-500 text-white"
+    }
 
     return (
       <Card>
@@ -94,7 +94,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
               {trend && (
                 <div
                   className={`flex items-center text-sm mt-2 ${
-                    trend.isPositive ? 'text-green-600' : 'text-red-600'
+                    trend.isPositive ? "text-green-600" : "text-red-600"
                   }`}>
                   {trend.isPositive ? (
                     <TrendingUp className="h-4 w-4 mr-1" />
@@ -109,15 +109,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
           </div>
         </CardContent>
       </Card>
-    );
-  };
+    )
+  }
 
   return (
     <div className={className}>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Дашборд</h1>
         <p className="text-gray-600">
-          Обзор ваших финансов на {format(new Date(), 'MMMM yyyy', { locale: ru })}
+          Обзор ваших финансов на {format(new Date(), "MMMM yyyy", { locale: ru })}
         </p>
       </div>
 
@@ -128,7 +128,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
           value={formatCurrency(stats.totalBalance)}
           subtitle="За все время"
           icon={<Wallet className="h-6 w-6" />}
-          color={stats.totalBalance >= 0 ? 'green' : 'red'}
+          color={stats.totalBalance >= 0 ? "green" : "red"}
         />
 
         <StatCard
@@ -166,12 +166,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
             <div className="text-center">
               <p
                 className={`text-3xl font-bold ${
-                  stats.monthlyBalance >= 0 ? 'text-green-600' : 'text-red-600'
+                  stats.monthlyBalance >= 0 ? "text-green-600" : "text-red-600"
                 }`}>
                 {formatCurrency(stats.monthlyBalance)}
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                {format(new Date(), 'MMMM yyyy', { locale: ru })}
+                {format(new Date(), "MMMM yyyy", { locale: ru })}
               </p>
             </div>
           </CardContent>
@@ -231,7 +231,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
               <span className="font-semibold">
                 {stats.totalIncome > 0
                   ? formatCurrency(
-                      stats.totalIncome / transactions.filter((t) => t.type === 'income').length,
+                      stats.totalIncome / transactions.filter((t) => t.type === "income").length
                     )
                   : formatCurrency(0)}
               </span>
@@ -241,7 +241,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
               <span className="font-semibold">
                 {stats.totalExpenses > 0
                   ? formatCurrency(
-                      stats.totalExpenses / transactions.filter((t) => t.type === 'expense').length,
+                      stats.totalExpenses / transactions.filter((t) => t.type === "expense").length
                     )
                   : formatCurrency(0)}
               </span>
@@ -263,32 +263,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = '' }) => {
               <span className="font-semibold">
                 {stats.totalExpenses > 0
                   ? (stats.totalIncome / stats.totalExpenses).toFixed(2)
-                  : '∞'}
+                  : "∞"}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Экономия:</span>
               <span
                 className={`font-semibold ${
-                  stats.totalBalance >= 0 ? 'text-green-600' : 'text-red-600'
+                  stats.totalBalance >= 0 ? "text-green-600" : "text-red-600"
                 }`}>
                 {stats.totalIncome > 0
                   ? `${((stats.totalBalance / stats.totalIncome) * 100).toFixed(1)}%`
-                  : '0%'}
+                  : "0%"}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Статус:</span>
               <span
                 className={`font-semibold ${
-                  stats.totalBalance >= 0 ? 'text-green-600' : 'text-red-600'
+                  stats.totalBalance >= 0 ? "text-green-600" : "text-red-600"
                 }`}>
-                {stats.totalBalance >= 0 ? 'Положительный' : 'Отрицательный'}
+                {stats.totalBalance >= 0 ? "Положительный" : "Отрицательный"}
               </span>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
-  );
-};
+  )
+}

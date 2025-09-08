@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { CheckCircle, AlertCircle, Download, Upload, Loader } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
@@ -32,13 +32,38 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
   const { addTransaction } = useTransactionStoreSupabase()
   const { addCategory, fetchCategories } = useCategoryStoreSupabase()
 
+  // Функция для пропуска миграции (объявляем рано)
+  const handleSkipMigration = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true)
+
+      // Создаем только дефолтные категории
+      await initializeDefaultCategories()
+      await fetchCategories()
+
+      setStep("complete")
+    } catch (_error) {
+      setError("Ошибка при создании дефолтных категорий")
+    } finally {
+      setLoading(false)
+    }
+  }, [fetchCategories])
+
   useEffect(() => {
     if (isOpen) {
-      setDataStats(getDataStats())
+      const stats = getDataStats()
+      setDataStats(stats)
       setStep("check")
       setError(null)
     }
   }, [isOpen])
+
+  // Отдельный useEffect для автоматического пропуска миграции
+  useEffect(() => {
+    if (isOpen && step === "check" && !dataStats.hasData) {
+      handleSkipMigration()
+    }
+  }, [isOpen, step, dataStats.hasData, handleSkipMigration])
 
   const handleDownloadBackup = (): void => {
     try {
@@ -118,22 +143,6 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
       setStep("complete")
     } catch (error) {
       setError(error instanceof Error ? error.message : "Ошибка при миграции данных")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSkipMigration = async (): Promise<void> => {
-    try {
-      setLoading(true)
-
-      // Создаем только дефолтные категории
-      await initializeDefaultCategories()
-      await fetchCategories()
-
-      setStep("complete")
-    } catch (_error) {
-      setError("Ошибка при создании дефолтных категорий")
     } finally {
       setLoading(false)
     }
@@ -248,11 +257,7 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
     </div>
   )
 
-  if (!dataStats.hasData && step === "check") {
-    // Если нет данных для миграции - сразу переходим к созданию дефолтных категорий
-    handleSkipMigration()
-    return null
-  }
+  // Убираем проблемный вызов handleSkipMigration из рендера
 
   return (
     <Modal isOpen={isOpen} onClose={() => {}} className="max-w-md">

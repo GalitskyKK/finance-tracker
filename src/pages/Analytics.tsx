@@ -1,124 +1,124 @@
-import React, { useMemo } from 'react';
-import { PieChart } from '@/components/charts/PieChart';
-import { LineChart } from '@/components/charts/LineChart';
-import { useTransactionStore } from '@/store/transactionStore';
-import { useCategoryStore } from '@/store/categoryStore';
+import React, { useMemo } from "react"
+import { PieChart } from "@/components/charts/PieChart"
+import { LineChart } from "@/components/charts/LineChart"
+import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
+import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
 
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval } from "date-fns"
 
 const Analytics: React.FC = () => {
-  const { transactions } = useTransactionStore();
-  const { categories } = useCategoryStore();
+  const { transactions } = useTransactionStoreSupabase()
+  const { categories } = useCategoryStoreSupabase()
 
   // Данные для pie chart расходов по категориям
   const expenseDataByCategory = useMemo(() => {
-    const expenseTransactions = transactions.filter((t) => t.type === 'expense');
-    const categoryTotals = new Map<string, number>();
+    const expenseTransactions = transactions.filter((t) => t.type === "expense")
+    const categoryTotals = new Map<string, number>()
 
     expenseTransactions.forEach((transaction) => {
-      const current = categoryTotals.get(transaction.categoryId) || 0;
-      categoryTotals.set(transaction.categoryId, current + transaction.amount);
-    });
+      const current = categoryTotals.get(transaction.categoryId) || 0
+      categoryTotals.set(transaction.categoryId, current + transaction.amount)
+    })
 
     return Array.from(categoryTotals.entries())
       .map(([categoryId, amount]) => {
-        const category = categories.find((c) => c.id === categoryId);
+        const category = categories.find((c) => c.id === categoryId)
         return {
-          name: category?.name || 'Неизвестная категория',
+          name: category?.name || "Неизвестная категория",
           value: amount,
-          color: category?.color || '#6B7280',
-        };
+          color: category?.color || "#6B7280"
+        }
       })
-      .sort((a, b) => b.value - a.value);
-  }, [transactions, categories]);
+      .sort((a, b) => b.value - a.value)
+  }, [transactions, categories])
 
   // Данные для pie chart доходов по категориям
   const incomeDataByCategory = useMemo(() => {
-    const incomeTransactions = transactions.filter((t) => t.type === 'income');
-    const categoryTotals = new Map<string, number>();
+    const incomeTransactions = transactions.filter((t) => t.type === "income")
+    const categoryTotals = new Map<string, number>()
 
     incomeTransactions.forEach((transaction) => {
-      const current = categoryTotals.get(transaction.categoryId) || 0;
-      categoryTotals.set(transaction.categoryId, current + transaction.amount);
-    });
+      const current = categoryTotals.get(transaction.categoryId) || 0
+      categoryTotals.set(transaction.categoryId, current + transaction.amount)
+    })
 
     return Array.from(categoryTotals.entries())
       .map(([categoryId, amount]) => {
-        const category = categories.find((c) => c.id === categoryId);
+        const category = categories.find((c) => c.id === categoryId)
         return {
-          name: category?.name || 'Неизвестная категория',
+          name: category?.name || "Неизвестная категория",
           value: amount,
-          color: category?.color || '#6B7280',
-        };
+          color: category?.color || "#6B7280"
+        }
       })
-      .sort((a, b) => b.value - a.value);
-  }, [transactions, categories]);
+      .sort((a, b) => b.value - a.value)
+  }, [transactions, categories])
 
   // Данные для line chart по дням текущего месяца
   const dailyData = useMemo(() => {
-    const now = new Date();
-    const startOfCurrentMonth = startOfMonth(now);
-    const endOfCurrentMonth = endOfMonth(now);
+    const now = new Date()
+    const startOfCurrentMonth = startOfMonth(now)
+    const endOfCurrentMonth = endOfMonth(now)
 
     const days = eachDayOfInterval({
       start: startOfCurrentMonth,
-      end: endOfCurrentMonth,
-    });
+      end: endOfCurrentMonth
+    })
 
     return days.map((day) => {
       const dayTransactions = transactions.filter((transaction) => {
-        const transactionDate = new Date(transaction.date);
+        const transactionDate = new Date(transaction.date)
         return isWithinInterval(transactionDate, {
           start: day,
-          end: day,
-        });
-      });
+          end: day
+        })
+      })
 
       const income = dayTransactions
-        .filter((t) => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .filter((t) => t.type === "income")
+        .reduce((sum, t) => sum + t.amount, 0)
 
       const expense = dayTransactions
-        .filter((t) => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .filter((t) => t.type === "expense")
+        .reduce((sum, t) => sum + t.amount, 0)
 
-      const balance = income - expense;
+      const balance = income - expense
 
       return {
-        name: format(day, 'dd.MM'),
+        name: format(day, "dd.MM"),
         income,
         expense,
-        balance,
-      };
-    });
-  }, [transactions]);
+        balance
+      }
+    })
+  }, [transactions])
 
   // Данные для line chart по месяцам
   const monthlyData = useMemo(() => {
-    const monthlyTotals = new Map<string, { income: number; expense: number }>();
+    const monthlyTotals = new Map<string, { income: number; expense: number }>()
 
     transactions.forEach((transaction) => {
-      const monthKey = format(new Date(transaction.date), 'yyyy-MM');
-      const current = monthlyTotals.get(monthKey) || { income: 0, expense: 0 };
+      const monthKey = format(new Date(transaction.date), "yyyy-MM")
+      const current = monthlyTotals.get(monthKey) || { income: 0, expense: 0 }
 
-      if (transaction.type === 'income') {
-        current.income += transaction.amount;
+      if (transaction.type === "income") {
+        current.income += transaction.amount
       } else {
-        current.expense += transaction.amount;
+        current.expense += transaction.amount
       }
 
-      monthlyTotals.set(monthKey, current);
-    });
+      monthlyTotals.set(monthKey, current)
+    })
 
     return Array.from(monthlyTotals.entries())
       .map(([month, totals]) => ({
-        name: format(new Date(month + '-01'), 'MMM yyyy'),
+        name: format(new Date(month + "-01"), "MMM yyyy"),
         income: totals.income,
         expense: totals.expense,
-        balance: totals.income - totals.expense,
+        balance: totals.income - totals.expense
       }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [transactions]);
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [transactions])
 
   return (
     <div className="space-y-6">
@@ -141,9 +141,9 @@ const Analytics: React.FC = () => {
           title="Динамика по дням (текущий месяц)"
           height={400}
           lines={[
-            { dataKey: 'income', color: '#10B981', name: 'Доходы' },
-            { dataKey: 'expense', color: '#EF4444', name: 'Расходы' },
-            { dataKey: 'balance', color: '#3B82F6', name: 'Баланс' },
+            { dataKey: "income", color: "#10B981", name: "Доходы" },
+            { dataKey: "expense", color: "#EF4444", name: "Расходы" },
+            { dataKey: "balance", color: "#3B82F6", name: "Баланс" }
           ]}
         />
       </div>
@@ -154,9 +154,9 @@ const Analytics: React.FC = () => {
           title="Динамика по месяцам"
           height={400}
           lines={[
-            { dataKey: 'income', color: '#10B981', name: 'Доходы' },
-            { dataKey: 'expense', color: '#EF4444', name: 'Расходы' },
-            { dataKey: 'balance', color: '#3B82F6', name: 'Баланс' },
+            { dataKey: "income", color: "#10B981", name: "Доходы" },
+            { dataKey: "expense", color: "#EF4444", name: "Расходы" },
+            { dataKey: "balance", color: "#3B82F6", name: "Баланс" }
           ]}
         />
       </div>
@@ -173,7 +173,7 @@ const Analytics: React.FC = () => {
                   <span className="text-sm text-gray-700">{item.name}</span>
                 </div>
                 <span className="text-sm font-semibold text-gray-900">
-                  {item.value.toLocaleString('ru-RU')} ₽
+                  {item.value.toLocaleString("ru-RU")} ₽
                 </span>
               </div>
             ))}
@@ -190,7 +190,7 @@ const Analytics: React.FC = () => {
                   <span className="text-sm text-gray-700">{item.name}</span>
                 </div>
                 <span className="text-sm font-semibold text-gray-900">
-                  {item.value.toLocaleString('ru-RU')} ₽
+                  {item.value.toLocaleString("ru-RU")} ₽
                 </span>
               </div>
             ))}
@@ -214,15 +214,15 @@ const Analytics: React.FC = () => {
                 {transactions.length > 0
                   ? (
                       transactions.reduce((sum, t) => sum + t.amount, 0) / transactions.length
-                    ).toLocaleString('ru-RU') + ' ₽'
-                  : '0 ₽'}
+                    ).toLocaleString("ru-RU") + " ₽"
+                  : "0 ₽"}
               </span>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Analytics;
+export default Analytics
