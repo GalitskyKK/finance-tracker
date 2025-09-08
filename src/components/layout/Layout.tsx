@@ -1,8 +1,7 @@
-import React, { useState } from "react"
-import { Menu } from "lucide-react"
+import React from "react"
 import { Header } from "./Header"
 import { Sidebar } from "./Sidebar"
-import { Button } from "@/components/ui/Button"
+import { BottomNavigation } from "./BottomNavigation"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -15,41 +14,28 @@ export const Layout: React.FC<LayoutProps> = ({
   currentPage,
   onPageChange
 }): React.ReactElement => {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  const toggleSidebar = (): void => {
-    setSidebarOpen(!sidebarOpen)
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Header />
+      <div className="flex min-h-screen">
+        {/* Desktop Sidebar - скрыт на мобильных */}
+        <div className="hidden lg:block">
+          <Sidebar currentPage={currentPage} onPageChange={onPageChange} />
+        </div>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <Sidebar
-          currentPage={currentPage}
-          onPageChange={onPageChange}
-          isOpen={sidebarOpen}
-          onToggle={toggleSidebar}
-        />
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <Header />
 
-        {/* Main content */}
-        <div className="flex-1 lg:ml-0">
-          {/* Mobile menu button */}
-          <div className="lg:hidden fixed top-4 left-4 z-30">
-            <Button variant="secondary" size="sm" onClick={toggleSidebar} className="!p-2">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Content */}
-          <main className="p-4 lg:p-8 pt-16 lg:pt-8">
+          {/* Main content */}
+          <main className="flex-1 p-4 lg:p-8 pb-20 lg:pb-8">
             <div className="max-w-7xl mx-auto">{children}</div>
           </main>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation - показывается только на мобильных */}
+      <BottomNavigation currentPage={currentPage} onPageChange={onPageChange} />
     </div>
   )
 }
