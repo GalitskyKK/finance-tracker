@@ -4,7 +4,7 @@ import { LineChart } from "@/components/charts/LineChart"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
 
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isWithinInterval } from "date-fns"
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns"
 
 const Analytics: React.FC = () => {
   const { transactions } = useTransactionStoreSupabase()
@@ -68,10 +68,7 @@ const Analytics: React.FC = () => {
     return days.map((day) => {
       const dayTransactions = transactions.filter((transaction) => {
         const transactionDate = new Date(transaction.date)
-        return isWithinInterval(transactionDate, {
-          start: day,
-          end: day
-        })
+        return isSameDay(transactionDate, day)
       })
 
       const income = dayTransactions
