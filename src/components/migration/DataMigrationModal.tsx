@@ -9,10 +9,7 @@ import {
   clearLocalStorageData
 } from "@/utils/dataExport"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
-import {
-  useCategoryStoreSupabase,
-  initializeDefaultCategories
-} from "@/store/categoryStoreSupabase"
+import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
 import { useAuthStore } from "@/store/authStore"
 
 interface DataMigrationModalProps {
@@ -30,20 +27,19 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
 
   const { user } = useAuthStore()
   const { addTransaction } = useTransactionStoreSupabase()
-  const { addCategory, fetchCategories } = useCategoryStoreSupabase()
+  const { fetchCategories } = useCategoryStoreSupabase()
 
   // Функция для пропуска миграции (объявляем рано)
   const handleSkipMigration = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
 
-      // Создаем только дефолтные категории
-      await initializeDefaultCategories()
+      // Загружаем глобальные категории (они уже есть в БД)
       await fetchCategories()
 
       setStep("complete")
     } catch (_error) {
-      setError("Ошибка при создании дефолтных категорий")
+      setError("Ошибка при загрузке категорий")
     } finally {
       setLoading(false)
     }
@@ -95,30 +91,11 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
 
       // Starting migration
 
-      // Шаг 1: Инициализируем дефолтные категории
-      await initializeDefaultCategories()
+      // Шаг 1: Загружаем глобальные категории
       await fetchCategories()
 
-      // Шаг 2: Мигрируем кастомные категории
-      let _migratedCategoriesCount = 0
-      for (const category of exportedData.categories) {
-        try {
-          await addCategory({
-            name: category.name,
-            color: category.color,
-            icon: category.icon,
-            type: category.type
-          })
-          _migratedCategoriesCount++
-        } catch (_error) {
-          // Failed to migrate category - skip
-        }
-      }
-
-      // Обновляем список категорий после добавления
-      await fetchCategories()
-
-      // Шаг 3: Мигрируем транзакции
+      // Шаг 2: Мигрируем транзакции (категории теперь глобальные, не мигрируем их)
+      // Примечание: старые categoryId из localStorage могут не совпадать с новыми глобальными ID
       let _migratedTransactionsCount = 0
       for (const transaction of exportedData.transactions) {
         try {

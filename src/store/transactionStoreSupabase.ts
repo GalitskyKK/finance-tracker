@@ -31,7 +31,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
         .select(
           `
           *,
-          categories (
+          global_categories (
             id,
             name,
             color,

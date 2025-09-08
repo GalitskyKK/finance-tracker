@@ -9,10 +9,7 @@ const Transactions = React.lazy(() => import("@/pages/Transactions"))
 const Analytics = React.lazy(() => import("@/pages/Analytics"))
 import { useAuthStore } from "@/store/authStore"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
-import {
-  useCategoryStoreSupabase,
-  initializeDefaultCategories
-} from "@/store/categoryStoreSupabase"
+import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
 import { getDataStats } from "@/utils/dataExport"
 
 export const AppWithMigration: React.FC = () => {
@@ -39,7 +36,7 @@ export const AppWithMigration: React.FC = () => {
       try {
         // Initializing data for user
 
-        // Загружаем категории и транзакции из Supabase
+        // Загружаем глобальные категории и транзакции из Supabase
         await Promise.all([fetchCategories(), fetchTransactions()])
 
         // Проверяем, есть ли данные в localStorage для миграции
@@ -47,11 +44,8 @@ export const AppWithMigration: React.FC = () => {
         if (localData.hasData) {
           // Found local data, showing migration modal
           setShowMigrationModal(true)
-        } else {
-          // Если нет локальных данных - создаем дефолтные категории если их нет
-          await initializeDefaultCategories()
-          await fetchCategories()
         }
+        // Глобальные категории уже есть в БД, дополнительная инициализация не нужна
 
         setIsInitialized(true)
       } catch (_error) {

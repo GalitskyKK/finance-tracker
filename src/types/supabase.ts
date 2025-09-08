@@ -1,4 +1,16 @@
 // Типы для ответов от Supabase
+export interface SupabaseGlobalCategoryRow {
+  id: string
+  name: string
+  color: string
+  icon: string
+  type: "income" | "expense"
+  sort_order: number
+  is_active: boolean
+  created_at: string
+}
+
+// Старый тип для категорий (deprecated, для миграции)
 export interface SupabaseCategoryRow {
   id: string
   user_id: string

@@ -37,7 +37,7 @@ export const exportLocalStorageData = (): ExportedData | null => {
         c !== null &&
         typeof c.id === "string" &&
         typeof c.name === "string" &&
-        !c.isDefault // Не экспортируем дефолтные категории
+        c.isActive // Экспортируем только активные категории
     )
 
     return {
