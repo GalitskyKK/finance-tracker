@@ -115,24 +115,28 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Транзакции</CardTitle>
-            <div className="flex space-x-2">
+            <CardTitle className="text-base sm:text-lg">Транзакции</CardTitle>
+            <div className="flex space-x-1.5 sm:space-x-2">
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className={showFilters ? "bg-blue-100 text-blue-700" : ""}>
-                <Filter className="h-4 w-4 mr-2" />
-                Фильтры
+                className={`${showFilters ? "bg-blue-100 text-blue-700" : ""} !px-2 sm:!px-3`}>
+                <Filter className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Фильтры</span>
                 {hasActiveFilters && (
                   <span className="ml-1 bg-blue-500 text-white rounded-full px-1.5 py-0.5 text-xs">
                     !
                   </span>
                 )}
               </Button>
-              <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Добавить
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowAddModal(true)}
+                className="!px-2 sm:!px-3">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Добавить</span>
               </Button>
             </div>
           </div>
@@ -141,18 +145,22 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
         <CardContent>
           {/* Фильтры */}
           {showFilters && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg space-y-4">
+            <div className="mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-900">Фильтры</h3>
+                <h3 className="font-medium text-gray-900 text-sm sm:text-base">Фильтры</h3>
                 {hasActiveFilters && (
-                  <Button variant="secondary" size="sm" onClick={clearFilters}>
-                    <X className="h-4 w-4 mr-1" />
-                    Очистить
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="!px-2 sm:!px-3">
+                    <X className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Очистить</span>
                   </Button>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <Select
                   options={typeOptions}
                   value={filters.type}
@@ -229,53 +237,110 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
                 return (
                   <div
                     key={transaction.id}
-                    className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-                    <div className="flex items-center space-x-4">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                        style={{ backgroundColor: category?.color ?? "#6B7280" }}>
-                        {category?.icon ? (
-                          <span className="text-sm font-medium">
-                            {category.name.charAt(0).toUpperCase()}
-                          </span>
-                        ) : (
-                          <span className="text-sm font-medium">?</span>
-                        )}
+                    className="p-3 sm:p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+                    {/* Мобильная версия - вертикальная структура */}
+                    <div className="block sm:hidden">
+                      {/* Верхняя строка: иконка + описание + сумма */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div
+                            className="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-white"
+                            style={{ backgroundColor: category?.color ?? "#6B7280" }}>
+                            <span className="text-xs font-medium">
+                              {category?.icon ? category.name.charAt(0).toUpperCase() : "?"}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 text-sm truncate">
+                              {transaction.description}
+                            </h4>
+                          </div>
+                        </div>
+                        <span
+                          className={`font-semibold text-sm ml-3 flex-shrink-0 ${
+                            transaction.type === "income" ? "text-green-600" : "text-red-600"
+                          }`}>
+                          {formatAmountWithSign(transaction.amount, transaction.type)}
+                        </span>
                       </div>
 
-                      <div>
-                        <h4 className="font-medium text-gray-900">{transaction.description}</h4>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
-                          <span>{category?.name ?? "Неизвестная категория"}</span>
-                          <span>•</span>
+                      {/* Нижняя строка: категория + дата + кнопки */}
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-gray-500 flex-1 min-w-0">
+                          <span className="truncate">
+                            {category?.name ?? "Неизвестная категория"}
+                          </span>
+                          <span className="mx-1">•</span>
                           <span>{formatDate(transaction.date)}</span>
+                        </div>
+                        <div className="flex space-x-1 ml-3">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleEditTransaction(transaction)}
+                            className="!p-1.5">
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDeleteTransaction(transaction.id)}
+                            className="!p-1.5">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-3">
-                      <span
-                        className={`font-semibold ${
-                          transaction.type === "income" ? "text-green-600" : "text-red-600"
-                        }`}>
-                        {formatAmountWithSign(transaction.amount, transaction.type)}
-                      </span>
+                    {/* Десктопная версия - горизонтальная структура */}
+                    <div className="hidden sm:flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+                          style={{ backgroundColor: category?.color ?? "#6B7280" }}>
+                          {category?.icon ? (
+                            <span className="text-sm font-medium">
+                              {category.name.charAt(0).toUpperCase()}
+                            </span>
+                          ) : (
+                            <span className="text-sm font-medium">?</span>
+                          )}
+                        </div>
 
-                      <div className="flex space-x-1">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleEditTransaction(transaction)}
-                          className="!p-2">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDeleteTransaction(transaction.id)}
-                          className="!p-2">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div>
+                          <h4 className="font-medium text-gray-900">{transaction.description}</h4>
+                          <div className="flex items-center space-x-2 text-sm text-gray-500">
+                            <span>{category?.name ?? "Неизвестная категория"}</span>
+                            <span>•</span>
+                            <span>{formatDate(transaction.date)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-3">
+                        <span
+                          className={`font-semibold ${
+                            transaction.type === "income" ? "text-green-600" : "text-red-600"
+                          }`}>
+                          {formatAmountWithSign(transaction.amount, transaction.type)}
+                        </span>
+
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleEditTransaction(transaction)}
+                            className="!p-2">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDeleteTransaction(transaction.id)}
+                            className="!p-2">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
