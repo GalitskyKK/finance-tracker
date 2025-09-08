@@ -16,8 +16,10 @@ export const exportLocalStorageData = (): ExportedData | null => {
     const transactionsRaw = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS)
     const categoriesRaw = localStorage.getItem(STORAGE_KEYS.CATEGORIES)
 
-    const transactions: Transaction[] = transactionsRaw ? JSON.parse(transactionsRaw) : []
-    const categories: Category[] = categoriesRaw ? JSON.parse(categoriesRaw) : []
+    const transactions: Transaction[] = transactionsRaw
+      ? (JSON.parse(transactionsRaw) as Transaction[])
+      : []
+    const categories: Category[] = categoriesRaw ? (JSON.parse(categoriesRaw) as Category[]) : []
 
     // Валидируем данные
     const validTransactions = transactions.filter(
@@ -44,8 +46,8 @@ export const exportLocalStorageData = (): ExportedData | null => {
       exportedAt: new Date().toISOString(),
       version: "1.0.0"
     }
-  } catch (error) {
-    console.error("Error exporting localStorage data:", error)
+  } catch (_error) {
+    // console.error("Error exporting localStorage data:", _error)
     return null
   }
 }
@@ -69,8 +71,8 @@ export const downloadDataBackup = (data: ExportedData): void => {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  } catch (error) {
-    console.error("Error downloading backup:", error)
+  } catch (_error) {
+    // console.error("Error downloading backup:", _error)
     throw new Error("Failed to download backup file")
   }
 }
@@ -87,7 +89,7 @@ export const uploadDataBackup = (file: File): Promise<ExportedData> => {
 
     const reader = new FileReader()
 
-    reader.onload = (e) => {
+    reader.onload = (e): void => {
       try {
         const content = e.target?.result as string
         const data = JSON.parse(content) as ExportedData
@@ -98,12 +100,12 @@ export const uploadDataBackup = (file: File): Promise<ExportedData> => {
         }
 
         resolve(data)
-      } catch (error) {
+      } catch (_error) {
         reject(new Error("Failed to parse backup file"))
       }
     }
 
-    reader.onerror = () => {
+    reader.onerror = (): void => {
       reject(new Error("Failed to read backup file"))
     }
 
@@ -140,8 +142,8 @@ export const getDataStats = (): {
       dataSize,
       hasData: data.transactions.length > 0 || data.categories.length > 0
     }
-  } catch (error) {
-    console.error("Error getting data stats:", error)
+  } catch (_error) {
+    // console.error("Error getting data stats:", _error)
     return {
       transactionCount: 0,
       categoryCount: 0,
@@ -158,8 +160,8 @@ export const clearLocalStorageData = (): void => {
   try {
     localStorage.removeItem(STORAGE_KEYS.TRANSACTIONS)
     localStorage.removeItem(STORAGE_KEYS.CATEGORIES)
-    console.log("localStorage data cleared successfully")
-  } catch (error) {
-    console.error("Error clearing localStorage:", error)
+    // console.log("localStorage data cleared successfully")
+  } catch (_error) {
+    // console.error("Error clearing localStorage:", _error)
   }
 }

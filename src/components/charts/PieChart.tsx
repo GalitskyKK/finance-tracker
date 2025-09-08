@@ -40,7 +40,7 @@ export const PieChart: React.FC<PieChartProps> = ({
       payload: { percent: number }
     }>
   }): React.ReactElement | null => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       const data = payload[0]
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
@@ -132,7 +132,7 @@ export const PieChart: React.FC<PieChartProps> = ({
               fill="#8884d8"
               dataKey="value">
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color || `hsl(${index * 45}, 70%, 50%)`} />
+                <Cell key={`cell-${index}`} fill={entry.color ?? `hsl(${index * 45}, 70%, 50%)`} />
               ))}
             </Pie>
             {showTooltip && <Tooltip content={<CustomTooltip />} />}
@@ -140,8 +140,8 @@ export const PieChart: React.FC<PieChartProps> = ({
               <Legend
                 verticalAlign="bottom"
                 height={36}
-                formatter={(value: string, entry: any) => (
-                  <span style={{ color: entry.color || "#000" }}>{value}</span>
+                formatter={(value: string, entry: { color?: string }) => (
+                  <span style={{ color: entry.color ?? "#000" }}>{value}</span>
                 )}
               />
             )}

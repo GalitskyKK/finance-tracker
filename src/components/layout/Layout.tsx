@@ -1,21 +1,25 @@
-import React, { useState } from 'react';
-import { Menu } from 'lucide-react';
-import { Header } from './Header';
-import { Sidebar } from './Sidebar';
-import { Button } from '@/components/ui/Button';
+import React, { useState } from "react"
+import { Menu } from "lucide-react"
+import { Header } from "./Header"
+import { Sidebar } from "./Sidebar"
+import { Button } from "@/components/ui/Button"
 
 interface LayoutProps {
-  children: React.ReactNode;
-  currentPage: string;
-  onPageChange: (page: string) => void;
+  children: React.ReactNode
+  currentPage: string
+  onPageChange: (page: string) => void
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+export const Layout: React.FC<LayoutProps> = ({
+  children,
+  currentPage,
+  onPageChange
+}): React.ReactElement => {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+  const toggleSidebar = (): void => {
+    setSidebarOpen(!sidebarOpen)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -47,5 +51,5 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageCha
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

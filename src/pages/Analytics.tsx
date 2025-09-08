@@ -16,7 +16,7 @@ const Analytics: React.FC = () => {
     const categoryTotals = new Map<string, number>()
 
     expenseTransactions.forEach((transaction) => {
-      const current = categoryTotals.get(transaction.categoryId) || 0
+      const current = categoryTotals.get(transaction.categoryId) ?? 0
       categoryTotals.set(transaction.categoryId, current + transaction.amount)
     })
 
@@ -24,9 +24,9 @@ const Analytics: React.FC = () => {
       .map(([categoryId, amount]) => {
         const category = categories.find((c) => c.id === categoryId)
         return {
-          name: category?.name || "Неизвестная категория",
+          name: category?.name ?? "Неизвестная категория",
           value: amount,
-          color: category?.color || "#6B7280"
+          color: category?.color ?? "#6B7280"
         }
       })
       .sort((a, b) => b.value - a.value)
@@ -38,7 +38,7 @@ const Analytics: React.FC = () => {
     const categoryTotals = new Map<string, number>()
 
     incomeTransactions.forEach((transaction) => {
-      const current = categoryTotals.get(transaction.categoryId) || 0
+      const current = categoryTotals.get(transaction.categoryId) ?? 0
       categoryTotals.set(transaction.categoryId, current + transaction.amount)
     })
 
@@ -46,9 +46,9 @@ const Analytics: React.FC = () => {
       .map(([categoryId, amount]) => {
         const category = categories.find((c) => c.id === categoryId)
         return {
-          name: category?.name || "Неизвестная категория",
+          name: category?.name ?? "Неизвестная категория",
           value: amount,
-          color: category?.color || "#6B7280"
+          color: category?.color ?? "#6B7280"
         }
       })
       .sort((a, b) => b.value - a.value)
@@ -99,7 +99,7 @@ const Analytics: React.FC = () => {
 
     transactions.forEach((transaction) => {
       const monthKey = format(new Date(transaction.date), "yyyy-MM")
-      const current = monthlyTotals.get(monthKey) || { income: 0, expense: 0 }
+      const current = monthlyTotals.get(monthKey) ?? { income: 0, expense: 0 }
 
       if (transaction.type === "income") {
         current.income += transaction.amount

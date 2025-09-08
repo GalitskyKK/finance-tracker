@@ -22,8 +22,8 @@ export const Modal: React.FC<ModalProps> = ({
   className = ""
 }) => {
   // Закрытие по Escape
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
+  useEffect((): (() => void) => {
+    const handleEscape = (e: KeyboardEvent): void => {
       if (e.key === "Escape") {
         onClose()
       }
@@ -61,7 +61,7 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         className={`relative bg-white rounded-lg shadow-xl w-full mx-4 ${sizeClasses[size]} max-h-[90vh] overflow-hidden ${className}`}>
         {/* Header */}
-        {(title || showCloseButton) && (
+        {(!!title || showCloseButton) && (
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             {title && <h2 className="text-xl font-semibold text-gray-900">{title}</h2>}
             {showCloseButton && (

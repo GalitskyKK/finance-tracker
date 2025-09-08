@@ -35,11 +35,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     setValue
   } = useForm<CreateTransactionData>({
     defaultValues: {
-      amount: initialData?.amount || 0,
-      type: initialData?.type || "expense",
-      categoryId: initialData?.categoryId || "",
-      description: initialData?.description || "",
-      date: initialData?.date || formatDateForInput(new Date().toISOString())
+      amount: initialData?.amount ?? 0,
+      type: initialData?.type ?? "expense",
+      categoryId: initialData?.categoryId ?? "",
+      description: initialData?.description ?? "",
+      date: initialData?.date ?? formatDateForInput(new Date().toISOString())
     }
   })
 
@@ -53,7 +53,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     icon: category.icon
   }))
 
-  const onSubmit = async (data: CreateTransactionData) => {
+  const onSubmit = async (data: CreateTransactionData): Promise<void> => {
     try {
       // Преобразуем amount в число
       const processedData = {
@@ -75,7 +75,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   }
 
-  const handleTypeChange = (type: "income" | "expense") => {
+  const handleTypeChange = (type: "income" | "expense"): void => {
     setValue("type", type)
     setValue("categoryId", "") // Сбрасываем категорию при смене типа
   }

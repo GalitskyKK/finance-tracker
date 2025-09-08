@@ -2,7 +2,7 @@ import type { User as SupabaseUser, Session as SupabaseSession } from "@supabase
 
 export type AuthUser = SupabaseUser
 
-export interface Session extends SupabaseSession {}
+export type Session = SupabaseSession
 
 export interface LoginCredentials {
   email: string

@@ -8,7 +8,7 @@ export const UserMenu: React.FC = () => {
   const { user, signOut, loading } = useAuthStore()
 
   // Закрытие меню при клике вне его
-  useEffect(() => {
+  useEffect((): (() => void) => {
     const handleClickOutside = (event: MouseEvent): void => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false)
@@ -32,7 +32,10 @@ export const UserMenu: React.FC = () => {
 
   if (!user) return null
 
-  const userName = user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Пользователь"
+  const userName =
+    (user.user_metadata as { name?: string } | null)?.name ??
+    user.email?.split("@")[0] ??
+    "Пользователь"
   const userEmail = user.email ?? ""
 
   return (

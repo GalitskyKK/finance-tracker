@@ -63,7 +63,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
     )
   }, [filteredTransactions])
 
-  const handleDeleteTransaction = async (id: string) => {
+  const handleDeleteTransaction = async (id: string): Promise<void> => {
     if (window.confirm("Вы уверены, что хотите удалить эту транзакцию?")) {
       try {
         await deleteTransaction(id)
@@ -73,16 +73,16 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
     }
   }
 
-  const handleEditTransaction = (transaction: Transaction) => {
+  const handleEditTransaction = (transaction: Transaction): void => {
     setEditingTransaction(transaction)
   }
 
-  const handleCloseModals = () => {
+  const handleCloseModals = (): void => {
     setShowAddModal(false)
     setEditingTransaction(null)
   }
 
-  const clearFilters = () => {
+  const clearFilters = (): void => {
     setFilters({
       type: "all",
       categoryId: "",
@@ -92,7 +92,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
   }
 
   const hasActiveFilters =
-    filters.type !== "all" || filters.categoryId || filters.dateFrom || filters.dateTo
+    filters.type !== "all" || !!filters.categoryId || !!filters.dateFrom || !!filters.dateTo
 
   // Опции для фильтров
   const typeOptions = [
@@ -233,7 +233,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
                     <div className="flex items-center space-x-4">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                        style={{ backgroundColor: category?.color || "#6B7280" }}>
+                        style={{ backgroundColor: category?.color ?? "#6B7280" }}>
                         {category?.icon ? (
                           <span className="text-sm font-medium">
                             {category.name.charAt(0).toUpperCase()}
@@ -246,7 +246,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
                       <div>
                         <h4 className="font-medium text-gray-900">{transaction.description}</h4>
                         <div className="flex items-center space-x-2 text-sm text-gray-500">
-                          <span>{category?.name || "Неизвестная категория"}</span>
+                          <span>{category?.name ?? "Неизвестная категория"}</span>
                           <span>•</span>
                           <span>{formatDate(transaction.date)}</span>
                         </div>

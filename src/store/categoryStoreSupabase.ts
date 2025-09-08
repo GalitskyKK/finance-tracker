@@ -66,11 +66,12 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      const result = await supabase.auth.getUser()
-      const { user } = result.data
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
       if (!user) throw new Error("User not authenticated")
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from("categories")
         .insert([
           {
@@ -85,9 +86,10 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
         .select()
         .single()
 
-      if (error) throw error
+      if (result.error) throw result.error
+      if (!result.data) throw new Error("No data returned from insert")
 
-      const categoryRow = data as SupabaseCategoryRow
+      const categoryRow = result.data as SupabaseCategoryRow
 
       // Создаем объект категории в нашем формате
       const newCategory: Category = {
@@ -130,16 +132,17 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
       if (updates.icon !== undefined) updateData.icon = updates.icon
       if (updates.type !== undefined) updateData.type = updates.type
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from("categories")
         .update(updateData)
         .eq("id", id)
         .select()
         .single()
 
-      if (error) throw error
+      if (result.error) throw result.error
+      if (!result.data) throw new Error("No data returned from update")
 
-      const categoryRow = data as SupabaseCategoryRow
+      const categoryRow = result.data as SupabaseCategoryRow
 
       // Обновляем локальное состояние
       const { categories } = get()

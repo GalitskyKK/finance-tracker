@@ -61,14 +61,14 @@ export const AppWithMigration: React.FC = () => {
     }
 
     initializeData()
-  }, [isAuthenticated, user, authLoading]) // Убираем isInitialized, fetchCategories, fetchTransactions из зависимостей
+  }, [isAuthenticated, user, authLoading, fetchCategories, fetchTransactions, isInitialized])
 
   const handleMigrationClose = useCallback((): void => {
     setShowMigrationModal(false)
     // После закрытия модала миграции обновляем данные
     fetchCategories()
     fetchTransactions()
-  }, [])
+  }, [fetchCategories, fetchTransactions])
 
   const renderPage = (): JSX.Element => {
     switch (currentPage) {

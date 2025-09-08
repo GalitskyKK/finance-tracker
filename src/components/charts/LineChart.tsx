@@ -57,7 +57,7 @@ export const LineChart: React.FC<LineChartProps> = ({
     payload?: Array<{ color: string; name: string; value: number }>
     label?: string
   }): React.ReactElement | null => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-medium text-gray-900 mb-2">{label}</p>

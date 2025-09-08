@@ -75,11 +75,12 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
     set({ loading: true, error: null })
 
     try {
-      const result = await supabase.auth.getUser()
-      const { user } = result.data
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
       if (!user) throw new Error("User not authenticated")
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from("transactions")
         .insert([
           {
@@ -94,9 +95,10 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
         .select()
         .single()
 
-      if (error) throw error
+      if (result.error) throw result.error
+      if (!result.data) throw new Error("No data returned from insert")
 
-      const transactionRow = data as SupabaseTransactionRow
+      const transactionRow = result.data as SupabaseTransactionRow
 
       // Создаем объект транзакции в нашем формате
       const newTransaction: Transaction = {
@@ -140,16 +142,17 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       if (updates.description !== undefined) updateData.description = updates.description
       if (updates.date !== undefined) updateData.date = updates.date
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from("transactions")
         .update(updateData)
         .eq("id", id)
         .select()
         .single()
 
-      if (error) throw error
+      if (result.error) throw result.error
+      if (!result.data) throw new Error("No data returned from update")
 
-      const transactionRow = data as SupabaseTransactionRow
+      const transactionRow = result.data as SupabaseTransactionRow
 
       // Обновляем локальное состояние
       const { transactions } = get()
@@ -201,7 +204,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to delete transaction"
-      console.error("Error deleting transaction:", error)
+      // console.error("Error deleting transaction:", error)
       set({
         error: errorMessage,
         loading: false
