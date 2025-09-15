@@ -49,8 +49,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChan
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.amount, 0)
 
-    const monthlyBalance = monthlyIncome - monthlyExpenses
-
     // Количество транзакций
     const totalTransactions = transactions.length
     const monthlyTransactions = currentMonthTransactions.length
@@ -59,7 +57,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChan
       totalBalance,
       totalIncome,
       totalExpenses,
-      monthlyBalance,
       monthlyIncome,
       monthlyExpenses,
       totalTransactions,
@@ -218,34 +215,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChan
           <span className="text-gray-500">— {format(new Date(), "MMMM", { locale: ru })}</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200">
-            <div className="text-center">
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <div
-                  className={`p-2 rounded-xl ${
-                    stats.monthlyBalance >= 0 ? "bg-emerald-100" : "bg-red-100"
-                  }`}>
-                  <Wallet
-                    className={`h-5 w-5 ${
-                      stats.monthlyBalance >= 0 ? "text-emerald-600" : "text-red-600"
-                    }`}
-                  />
-                </div>
-                <h3 className="font-semibold text-gray-800">Баланс месяца</h3>
-              </div>
-              <p
-                className={`text-4xl font-bold mb-2 ${
-                  stats.monthlyBalance >= 0 ? "text-emerald-600" : "text-red-600"
-                }`}>
-                {formatCurrency(stats.monthlyBalance)}
-              </p>
-              <p className="text-sm text-gray-500">
-                {stats.monthlyBalance >= 0 ? "Вы в плюсе! 🎉" : "Стоит сократить расходы"}
-              </p>
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200">
             <div className="text-center">
               <div className="flex items-center justify-center space-x-2 mb-4">
