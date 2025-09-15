@@ -1,5 +1,6 @@
 import React, { useMemo } from "react"
 import { TrendingUp, TrendingDown, Wallet, Target, PiggyBank, Calendar, Award } from "lucide-react"
+import { useTransactionFilterStore } from "@/store/transactionFilterStore"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { formatCurrency } from "@/utils/formatters"
 import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
@@ -7,10 +8,12 @@ import { ru } from "date-fns/locale"
 
 interface DashboardProps {
   className?: string
+  onPageChange?: (page: string) => void
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ className = "" }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChange }) => {
   const { transactions } = useTransactionStoreSupabase()
+  const { setFilter } = useTransactionFilterStore()
 
   // Вычисляем статистику
   const stats = useMemo(() => {
@@ -70,22 +73,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "" }) => {
     subtitle?: string
     icon: React.ReactNode
     gradient: string
+    iconColor: string
     description?: string
-  }> = ({ title, value, subtitle, icon, gradient, description }) => {
+    onClick?: () => void
+  }> = ({ title, value, subtitle, icon, gradient, iconColor, description, onClick }) => {
     return (
-      <div className="relative bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200 group overflow-hidden">
+      <div
+        onClick={onClick}
+        className={`relative bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200 group overflow-hidden ${
+          onClick ? "cursor-pointer hover:scale-[1.02] active:scale-[0.98]" : ""
+        }`}>
         {/* Градиентный фон */}
         <div className={`absolute top-0 left-0 w-full h-1.5 ${gradient}`} />
 
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-3">
-              <div
-                className={`p-2 rounded-xl ${gradient.replace(
-                  "bg-gradient-to-r",
-                  "bg-gradient-to-br"
-                )} bg-opacity-10`}>
-                <div className="text-emerald-600">{icon}</div>
+              <div className="p-2 rounded-xl bg-gray-50 group-hover:bg-gray-100 transition-colors duration-200">
+                <div className={iconColor}>{icon}</div>
               </div>
               <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
             </div>
@@ -98,6 +103,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "" }) => {
               )}
             </div>
           </div>
+
+          {onClick && (
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1">
+              <svg
+                className="w-5 h-5 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -139,6 +161,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "" }) => {
           value={formatCurrency(stats.totalBalance)}
           subtitle={stats.totalBalance >= 0 ? "Все хорошо!" : "Нужно подтянуть"}
           icon={<Wallet className="h-5 w-5" />}
+          iconColor={stats.totalBalance >= 0 ? "text-emerald-600" : "text-red-600"}
           gradient={
             stats.totalBalance >= 0
               ? "bg-gradient-to-r from-emerald-500 to-green-500"
@@ -152,8 +175,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "" }) => {
           value={formatCurrency(stats.totalIncome)}
           subtitle="Общий доход"
           icon={<TrendingUp className="h-5 w-5" />}
+          iconColor="text-emerald-600"
           gradient="bg-gradient-to-r from-emerald-500 to-green-500"
           description="Сумма всех ваших доходов"
+          onClick={() => {
+            setFilter("income")
+            onPageChange?.("transactions")
+          }}
         />
 
         <ModernStatCard
@@ -161,8 +189,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "" }) => {
           value={formatCurrency(stats.totalExpenses)}
           subtitle="Общий расход"
           icon={<TrendingDown className="h-5 w-5" />}
+          iconColor="text-red-600"
           gradient="bg-gradient-to-r from-red-500 to-red-600"
           description="Сумма всех ваших расходов"
+          onClick={() => {
+            setFilter("expense")
+            onPageChange?.("transactions")
+          }}
         />
 
         <ModernStatCard
@@ -170,8 +203,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "" }) => {
           value={stats.totalTransactions.toString()}
           subtitle={`${stats.monthlyTransactions} в этом месяце`}
           icon={<Target className="h-5 w-5" />}
+          iconColor="text-blue-600"
           gradient="bg-gradient-to-r from-blue-500 to-indigo-500"
           description="Количество всех транзакций"
+          onClick={() => onPageChange?.("transactions")}
         />
       </div>
 

@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/Modal"
 import { TransactionForm } from "@/components/forms/TransactionForm"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
+import { useTransactionFilterStore } from "@/store/transactionFilterStore"
 import { Transaction, FilterOptions } from "@/types"
 import { formatDate, formatAmountWithSign } from "@/utils/formatters"
 
@@ -124,6 +125,7 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
 export const TransactionList: React.FC<TransactionListProps> = ({ className = "" }) => {
   const { transactions, deleteTransaction } = useTransactionStoreSupabase()
   const { categories, getCategoryById } = useCategoryStoreSupabase()
+  const { activeFilter, clearFilter } = useTransactionFilterStore()
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
@@ -135,6 +137,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
     dateFrom: "",
     dateTo: ""
   })
+
+  // Синхронизируем с глобальным фильтром
+  React.useEffect(() => {
+    if (activeFilter !== filters.type) {
+      setFilters((prev) => ({ ...prev, type: activeFilter }))
+      // Автоматически показываем фильтры если установлен специфичный фильтр
+      if (activeFilter !== "all") {
+        setShowFilters(true)
+      }
+    }
+  }, [activeFilter, filters.type])
 
   // Фильтрация транзакций
   const filteredTransactions = useMemo(() => {
@@ -201,6 +214,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
       dateFrom: "",
       dateTo: ""
     })
+    clearFilter() // Очищаем глобальный фильтр
   }
 
   const hasActiveFilters =
@@ -253,6 +267,25 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
             </Button>
           </div>
         </div>
+
+        {/* Информация о активном фильтре с дашборда */}
+        {activeFilter !== "all" && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-blue-800 font-medium text-sm">
+                  Показаны только {activeFilter === "income" ? "доходы" : "расходы"}
+                </span>
+              </div>
+              <button
+                onClick={clearFilter}
+                className="text-blue-600 hover:text-blue-800 transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Компактные фильтры */}
         {showFilters && (

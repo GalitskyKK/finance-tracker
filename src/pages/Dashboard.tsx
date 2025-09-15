@@ -1,8 +1,12 @@
-import React from 'react';
-import { Dashboard as DashboardComponent } from '@/components/Dashboard';
+import React from "react"
+import { Dashboard as DashboardComponent } from "@/components/Dashboard"
 
-const Dashboard: React.FC = () => {
-  return <DashboardComponent />;
-};
+interface DashboardPageProps {
+  onPageChange?: (page: string) => void
+}
 
-export default Dashboard;
+const Dashboard: React.FC<DashboardPageProps> = ({ onPageChange }) => {
+  return <DashboardComponent onPageChange={onPageChange} />
+}
+
+export default Dashboard

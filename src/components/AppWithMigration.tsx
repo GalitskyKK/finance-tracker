@@ -69,7 +69,7 @@ export const AppWithMigration: React.FC = () => {
       case "dashboard":
         return (
           <Suspense fallback={<PageLoadingSpinner />}>
-            <Dashboard />
+            <Dashboard onPageChange={setCurrentPage} />
           </Suspense>
         )
       case "transactions":
