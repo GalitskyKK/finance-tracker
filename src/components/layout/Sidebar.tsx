@@ -18,11 +18,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, cla
   return (
     <aside
       className={`
-      w-64 min-h-screen bg-gradient-to-b from-white to-gray-50/50 border-r border-gray-200
+      w-64 min-h-screen bg-gradient-to-b from-white to-emerald-50/30 border-r border-emerald-100
       ${className}
     `}>
-      <div className="h-16 px-6 border-b border-gray-200/60 bg-white/80 backdrop-blur-sm flex items-center">
-        <h2 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+      <div className="h-16 px-6 border-b border-emerald-100/60 bg-white/80 backdrop-blur-sm flex items-center">
+        <h2 className="text-lg font-semibold bg-gradient-to-r from-emerald-800 to-emerald-600 bg-clip-text text-transparent">
           Навигация
         </h2>
       </div>
@@ -42,8 +42,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, cla
                       transition-all duration-200 ease-in-out group relative overflow-hidden
                       ${
                         isActive
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 transform scale-[1.02]"
-                          : "text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:text-gray-900 hover:transform hover:scale-[1.01] hover:shadow-md"
+                          ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 transform scale-[1.02]"
+                          : "text-gray-700 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-emerald-100 hover:text-emerald-800 hover:transform hover:scale-[1.01] hover:shadow-md hover:border-emerald-200"
                       }
                     `}>
                   <div
@@ -52,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, cla
                       ${
                         isActive
                           ? "bg-white/20 text-white"
-                          : "bg-gray-100 text-gray-500 group-hover:bg-white group-hover:text-gray-700 group-hover:shadow-sm"
+                          : "bg-gray-100 text-gray-500 group-hover:bg-emerald-100 group-hover:text-emerald-700 group-hover:shadow-sm"
                       }
                     `}>
                     <Icon className="h-4 w-4" />
