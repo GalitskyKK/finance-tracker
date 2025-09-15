@@ -8,9 +8,9 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { id: "dashboard", label: "Дашборд", icon: Home },
-  { id: "transactions", label: "Транзакции", icon: CreditCard },
-  { id: "analytics", label: "Аналитика", icon: BarChart3 },
+  { id: "dashboard", label: "Главная", icon: Home },
+  { id: "transactions", label: "Мои финансы", icon: CreditCard },
+  { id: "analytics", label: "Отчеты", icon: BarChart3 },
   { id: "settings", label: "Настройки", icon: Settings }
 ]
 
