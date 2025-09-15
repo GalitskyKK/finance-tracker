@@ -1,6 +1,5 @@
 import React, { useState } from "react"
 import {
-  LineChart as RechartsLineChart,
   Line,
   XAxis,
   YAxis,
@@ -8,7 +7,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  Area,
   ComposedChart
 } from "recharts"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
@@ -147,7 +145,7 @@ export const LineChart: React.FC<LineChartProps> = ({
             }}>
             {/* Градиентная определяющая */}
             <defs>
-              {lines.map((line, index) => (
+              {lines.map((line) => (
                 <linearGradient
                   key={`gradient-${line.dataKey}`}
                   id={`gradient-${line.dataKey}`}
@@ -195,7 +193,7 @@ export const LineChart: React.FC<LineChartProps> = ({
             {showTooltip && <Tooltip content={<CustomTooltip />} />}
 
             {/* Линии с градиентной заливкой */}
-            {lines.map((line, index) => {
+            {lines.map((line) => {
               const isActive = activeDataKey === line.dataKey
               return (
                 <Line

@@ -17,7 +17,7 @@ export const Layout: React.FC<LayoutProps> = ({
 }): React.ReactElement => {
   const { clearFilter } = useTransactionFilterStore()
 
-  const handleLogoClick = () => {
+  const handleLogoClick = (): void => {
     clearFilter() // Сбрасываем фильтры при переходе на главную
     onPageChange("dashboard")
   }

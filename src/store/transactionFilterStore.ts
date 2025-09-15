@@ -9,11 +9,11 @@ interface TransactionFilterState {
 export const useTransactionFilterStore = create<TransactionFilterState>((set) => ({
   activeFilter: "all",
 
-  setFilter: (filter: "income" | "expense" | "all") => {
+  setFilter: (filter: "income" | "expense" | "all"): void => {
     set({ activeFilter: filter })
   },
 
-  clearFilter: () => {
+  clearFilter: (): void => {
     set({ activeFilter: "all" })
   }
 }))

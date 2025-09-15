@@ -3,11 +3,7 @@ import { PieChart } from "@/components/charts/PieChart"
 import { LineChart } from "@/components/charts/LineChart"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
-import {
-  BarChart3,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react"
+import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react"
 import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns"
 import { ru } from "date-fns/locale"
 import { formatCurrency } from "@/utils/formatters"
@@ -65,8 +61,8 @@ const Analytics: React.FC = () => {
   }, [activeTabData])
 
   // Навигация по месяцам
-  const goToPreviousMonth = () => setCurrentMonth((prev) => subMonths(prev, 1))
-  const goToNextMonth = () => setCurrentMonth((prev) => addMonths(prev, 1))
+  const goToPreviousMonth = (): void => setCurrentMonth((prev) => subMonths(prev, 1))
+  const goToNextMonth = (): void => setCurrentMonth((prev) => addMonths(prev, 1))
   const isCurrentMonth = format(currentMonth, "yyyy-MM") === format(new Date(), "yyyy-MM")
 
   // Данные для тренда (последние 6 месяцев)
