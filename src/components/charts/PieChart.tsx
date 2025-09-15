@@ -18,6 +18,8 @@ interface PieChartProps {
   height?: number
   showLegend?: boolean
   showTooltip?: boolean
+  isDonut?: boolean // Новый проп для donut стиля
+  centerText?: string // Текст в центре
 }
 
 export const PieChart: React.FC<PieChartProps> = ({
@@ -26,7 +28,9 @@ export const PieChart: React.FC<PieChartProps> = ({
   className = "",
   height = 300,
   showLegend = true,
-  showTooltip = true
+  showTooltip = true,
+  isDonut = false,
+  centerText
 }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
@@ -188,10 +192,12 @@ export const PieChart: React.FC<PieChartProps> = ({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+      {title && (
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className={isDonut ? "relative" : ""}>
         <ResponsiveContainer width="100%" height={height}>
           <RechartsPieChart>
             <defs>
@@ -209,9 +215,9 @@ export const PieChart: React.FC<PieChartProps> = ({
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={renderCustomizedLabel}
+              label={!isDonut ? renderCustomizedLabel : undefined}
               outerRadius={Math.min(height * 0.35, 120)}
-              innerRadius={0}
+              innerRadius={isDonut ? Math.min(height * 0.2, 60) : 0}
               fill="#8884d8"
               dataKey="value"
               onMouseEnter={onPieEnter}
@@ -267,6 +273,14 @@ export const PieChart: React.FC<PieChartProps> = ({
             )}
           </RechartsPieChart>
         </ResponsiveContainer>
+        {/* Центральный текст для donut */}
+        {isDonut && centerText && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-600">{centerText}</div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
