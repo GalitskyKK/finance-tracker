@@ -3,7 +3,6 @@ import { Edit, Trash2, Plus, Filter, X, TrendingUp, TrendingDown } from "lucide-
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
 import { Select } from "@/components/ui/Select"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card"
 import { Modal } from "@/components/ui/Modal"
 import { TransactionForm } from "@/components/forms/TransactionForm"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
@@ -29,7 +28,6 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
   category,
   onEdit,
   onDelete,
-  onClose
 }) => {
   const isIncome = transaction.type === "income"
 
@@ -193,9 +191,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
     }
   }
 
-  const handleEditTransaction = (transaction: Transaction): void => {
-    setEditingTransaction(transaction)
-  }
+  // const handleEditTransaction = (transaction: Transaction): void => {
+  //   setEditingTransaction(transaction)
+  // }
 
   const handleCloseModals = (): void => {
     setShowAddModal(false)
