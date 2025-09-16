@@ -1,6 +1,7 @@
 import React from "react"
 import { Wallet } from "lucide-react"
 import { UserMenu } from "@/components/auth/UserMenu"
+import { PWAInstallButton } from "@/components/ui/PWAInstallButton"
 
 interface HeaderProps {
   className?: string
@@ -37,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ className = "", onLogoClick }) =
                 day: "numeric"
               })}
             </div>
+            <PWAInstallButton variant="secondary" size="sm" className="hidden sm:flex" />
             <UserMenu />
           </div>
         </div>

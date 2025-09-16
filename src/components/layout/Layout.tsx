@@ -2,6 +2,7 @@ import React from "react"
 import { Header } from "./Header"
 import { Sidebar } from "./Sidebar"
 import { BottomNavigation } from "./BottomNavigation"
+import { NetworkStatus } from "@/components/ui/NetworkStatus"
 import { useTransactionFilterStore } from "@/store/transactionFilterStore"
 
 interface LayoutProps {
@@ -43,6 +44,9 @@ export const Layout: React.FC<LayoutProps> = ({
 
       {/* Mobile Bottom Navigation - показывается только на мобильных */}
       <BottomNavigation currentPage={currentPage} onPageChange={onPageChange} />
+
+      {/* Network Status для отображения офлайн/онлайн статуса */}
+      <NetworkStatus />
     </div>
   )
 }
