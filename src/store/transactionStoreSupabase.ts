@@ -133,11 +133,6 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
     try {
       const cachedTransactions = await offlineUtils.getTransactionsFromCache()
 
-      // DEBUG: Добавляем логирование для диагностики
-      console.log("🔍 DEBUG loadFromCache:", {
-        transactionsCount: cachedTransactions.length
-      })
-
       set({
         transactions: cachedTransactions,
         loading: false,
@@ -146,9 +141,6 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to load transactions from cache"
-
-      // DEBUG: Логируем ошибки
-      console.error("❌ DEBUG loadFromCache error:", error)
 
       set({
         error: errorMessage,

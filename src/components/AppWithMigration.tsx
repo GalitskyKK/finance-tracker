@@ -55,26 +55,17 @@ export const AppWithMigration: React.FC = () => {
           await Promise.all([fetchCategories(), fetchTransactions()])
         } else {
           // Офлайн: загружаем только из кэша
-          console.log("🔄 DEBUG AppWithMigration offline initialization starting")
 
           try {
             // Загружаем категории из кэша
             const { loadFromCache: loadCategoriesFromCache } = useCategoryStoreSupabase.getState()
             await Promise.all([loadCategoriesFromCache(), loadFromCache()])
-
-            console.log("✅ DEBUG AppWithMigration offline initialization success")
           } catch (error) {
             // Failed to load from cache in offline mode - try individual loads
-            console.error("⚠️ DEBUG AppWithMigration offline initialization failed:", error)
-
             try {
               await loadFromCache()
             } catch (error2) {
               // Failed to load transactions from cache
-              console.error(
-                "❌ DEBUG AppWithMigration failed to load transactions from cache:",
-                error2
-              )
             }
           }
         }

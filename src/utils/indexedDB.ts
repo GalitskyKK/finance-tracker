@@ -183,18 +183,7 @@ class IndexedDBManager {
       const key = this.getLocalStorageKey(table)
       const serialized = JSON.stringify(data)
       localStorage.setItem(key, serialized)
-
-      // DEBUG: Логирование (убираем условие localhost)
-      console.log("💾 DEBUG saveToLocalStorage:", {
-        table,
-        key,
-        count: data.length,
-        size: serialized.length
-      })
     } catch (error) {
-      // DEBUG: Логируем ошибку
-      console.error("❌ DEBUG saveToLocalStorage error:", error)
-
       throw new Error(
         `Failed to save to localStorage: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -209,18 +198,8 @@ class IndexedDBManager {
       const data = localStorage.getItem(key)
       const result = data ? (JSON.parse(data) as T[]) : []
 
-      // DEBUG: Логирование
-      console.log("📖 DEBUG getFromLocalStorage:", {
-        table,
-        key,
-        hasData: !!data,
-        count: result.length
-      })
-
       return result
     } catch (error) {
-      // DEBUG: Логируем ошибку
-      console.error("❌ DEBUG getFromLocalStorage error:", error)
       return []
     }
   }
@@ -292,12 +271,6 @@ class IndexedDBManager {
   // ============ TRANSACTIONS ============
 
   async saveTransactions(transactions: Transaction[]): Promise<void> {
-    // DEBUG: Логирование
-    console.log("💾 DEBUG saveTransactions:", {
-      count: transactions.length,
-      isSupported: this.isSupported
-    })
-
     // Fallback to localStorage if IndexedDB not supported
     if (!this.isSupported) {
       this.saveToLocalStorage("transactions", transactions)
@@ -315,15 +288,11 @@ class IndexedDBManager {
 
       return new Promise((resolve, reject) => {
         transaction.oncomplete = (): void => {
-          console.log("✅ DEBUG saveTransactions to IndexedDB success")
           resolve()
         }
         transaction.onerror = (): void => reject(transaction.error)
       })
     } catch (error) {
-      // DEBUG: Логируем ошибку IndexedDB
-      console.log("⚠️ DEBUG IndexedDB failed, falling back to localStorage:", error)
-
       // Fallback to localStorage if IndexedDB fails
       this.isSupported = false
       this.saveToLocalStorage("transactions", transactions)
@@ -331,18 +300,9 @@ class IndexedDBManager {
   }
 
   async getTransactions(): Promise<Transaction[]> {
-    // DEBUG: Логирование
-    console.log("📖 DEBUG getTransactions:", {
-      isSupported: this.isSupported
-    })
-
     // Fallback to localStorage if IndexedDB not supported
     if (!this.isSupported) {
-      const result = this.getFromLocalStorage<Transaction>("transactions")
-      console.log("📖 DEBUG getTransactions from localStorage:", {
-        count: result.length
-      })
-      return result
+      return this.getFromLocalStorage<Transaction>("transactions")
     }
 
     try {
@@ -353,24 +313,14 @@ class IndexedDBManager {
 
       return new Promise((resolve, reject) => {
         request.onsuccess = (): void => {
-          console.log("📖 DEBUG getTransactions from IndexedDB:", {
-            count: request.result.length
-          })
           resolve(request.result)
         }
         request.onerror = (): void => reject(request.error)
       })
     } catch (error) {
-      // DEBUG: Логируем ошибку IndexedDB
-      console.log("⚠️ DEBUG getTransactions IndexedDB failed, falling back to localStorage:", error)
-
       // Fallback to localStorage if IndexedDB fails
       this.isSupported = false
-      const result = this.getFromLocalStorage<Transaction>("transactions")
-      console.log("📖 DEBUG getTransactions fallback result:", {
-        count: result.length
-      })
-      return result
+      return this.getFromLocalStorage<Transaction>("transactions")
     }
   }
 
