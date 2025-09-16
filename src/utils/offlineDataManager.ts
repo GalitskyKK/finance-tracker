@@ -27,6 +27,7 @@ class OfflineDataManager {
    * Создает офлайн транзакцию с временным ID
    */
   async createOfflineTransaction(data: CreateTransactionData): Promise<Transaction> {
+    console.log("🟡 createOfflineTransaction called:", data)
     const tempId = this.generateTemporaryId()
     const now = new Date().toISOString()
 

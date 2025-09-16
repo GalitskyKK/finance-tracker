@@ -306,6 +306,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
   },
 
   addTransactionOffline: async (transactionData: CreateTransactionData): Promise<void> => {
+    console.log("🟡 addTransactionOffline called:", transactionData)
     set({ loading: true, error: null })
 
     try {
@@ -325,6 +326,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
         isOfflineMode: true
       })
     } catch (error: unknown) {
+      console.log("🔴 addTransactionOffline error:", error)
       const errorMessage =
         error instanceof Error ? error.message : "Failed to add transaction offline"
       set({

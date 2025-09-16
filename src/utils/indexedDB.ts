@@ -346,8 +346,11 @@ class IndexedDBManager {
   }
 
   async saveTransaction(transaction: Transaction): Promise<void> {
+    console.log("🟡 saveTransaction called:", { id: transaction.id, isSupported: this.isSupported })
+
     // Fallback to localStorage if IndexedDB not supported
     if (!this.isSupported) {
+      console.log("🟡 saveTransaction using localStorage")
       const transactions = this.getFromLocalStorage<Transaction>("transactions")
       const existingIndex = transactions.findIndex((t) => t.id === transaction.id)
 
@@ -358,6 +361,7 @@ class IndexedDBManager {
       }
 
       this.saveToLocalStorage("transactions", transactions)
+      console.log("🟢 saveTransaction localStorage success")
       return
     }
 
@@ -368,11 +372,15 @@ class IndexedDBManager {
       store.put(transaction)
 
       return new Promise((resolve, reject) => {
-        dbTransaction.oncomplete = (): void => resolve()
+        dbTransaction.oncomplete = (): void => {
+          console.log("🟢 saveTransaction IndexedDB success")
+          resolve()
+        }
         dbTransaction.onerror = (): void => reject(dbTransaction.error)
       })
     } catch {
       // Fallback to localStorage if IndexedDB fails
+      console.log("🟡 saveTransaction IndexedDB failed, using localStorage fallback")
       this.isSupported = false
       const transactions = this.getFromLocalStorage<Transaction>("transactions")
       const existingIndex = transactions.findIndex((t) => t.id === transaction.id)
@@ -384,6 +392,7 @@ class IndexedDBManager {
       }
 
       this.saveToLocalStorage("transactions", transactions)
+      console.log("🟢 saveTransaction fallback localStorage success")
     }
   }
 
