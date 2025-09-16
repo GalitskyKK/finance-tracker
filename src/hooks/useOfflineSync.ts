@@ -258,7 +258,9 @@ export const offlineUtils = {
 
   // Сохранение транзакций в офлайн хранилище
   saveTransactionsToCache: async (transactions: Transaction[]): Promise<void> => {
+    console.log("🟡 saveTransactionsToCache called:", { count: transactions.length })
     await indexedDBManager.saveTransactions(transactions)
+    console.log("🟢 saveTransactionsToCache completed")
   },
 
   // Получение транзакций из офлайн хранилища

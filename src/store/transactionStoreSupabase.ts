@@ -151,6 +151,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
   },
 
   addTransaction: async (transactionData: CreateTransactionData): Promise<void> => {
+    console.log("🟡 addTransaction called:", transactionData)
     set({ loading: true, error: null })
 
     try {
@@ -207,7 +208,12 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
         loading: false
       })
     } catch (error: unknown) {
+      console.log("🔴 addTransaction error:", error)
       const errorMessage = error instanceof Error ? error.message : "Failed to add transaction"
+
+      // TODO: Здесь должна быть офлайн логика для сохранения в кэш
+      console.log("🟡 Should save to offline cache here")
+
       set({
         error: errorMessage,
         loading: false
