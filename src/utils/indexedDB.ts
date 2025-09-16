@@ -184,21 +184,16 @@ class IndexedDBManager {
       const serialized = JSON.stringify(data)
       localStorage.setItem(key, serialized)
 
-      // DEBUG: Логирование
-      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        console.log("💾 DEBUG saveToLocalStorage:", {
-          table,
-          key,
-          count: data.length,
-          size: serialized.length,
-          data: data
-        })
-      }
+      // DEBUG: Логирование (убираем условие localhost)
+      console.log("💾 DEBUG saveToLocalStorage:", {
+        table,
+        key,
+        count: data.length,
+        size: serialized.length
+      })
     } catch (error) {
       // DEBUG: Логируем ошибку
-      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        console.error("❌ DEBUG saveToLocalStorage error:", error)
-      }
+      console.error("❌ DEBUG saveToLocalStorage error:", error)
 
       throw new Error(
         `Failed to save to localStorage: ${
@@ -215,22 +210,17 @@ class IndexedDBManager {
       const result = data ? (JSON.parse(data) as T[]) : []
 
       // DEBUG: Логирование
-      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        console.log("📖 DEBUG getFromLocalStorage:", {
-          table,
-          key,
-          hasData: !!data,
-          count: result.length,
-          data: result
-        })
-      }
+      console.log("📖 DEBUG getFromLocalStorage:", {
+        table,
+        key,
+        hasData: !!data,
+        count: result.length
+      })
 
       return result
     } catch (error) {
       // DEBUG: Логируем ошибку
-      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        console.error("❌ DEBUG getFromLocalStorage error:", error)
-      }
+      console.error("❌ DEBUG getFromLocalStorage error:", error)
       return []
     }
   }
@@ -303,13 +293,10 @@ class IndexedDBManager {
 
   async saveTransactions(transactions: Transaction[]): Promise<void> {
     // DEBUG: Логирование
-    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-      console.log("💾 DEBUG saveTransactions:", {
-        count: transactions.length,
-        isSupported: this.isSupported,
-        transactions: transactions
-      })
-    }
+    console.log("💾 DEBUG saveTransactions:", {
+      count: transactions.length,
+      isSupported: this.isSupported
+    })
 
     // Fallback to localStorage if IndexedDB not supported
     if (!this.isSupported) {
@@ -328,18 +315,14 @@ class IndexedDBManager {
 
       return new Promise((resolve, reject) => {
         transaction.oncomplete = (): void => {
-          if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-            console.log("✅ DEBUG saveTransactions to IndexedDB success")
-          }
+          console.log("✅ DEBUG saveTransactions to IndexedDB success")
           resolve()
         }
         transaction.onerror = (): void => reject(transaction.error)
       })
     } catch (error) {
       // DEBUG: Логируем ошибку IndexedDB
-      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        console.log("⚠️ DEBUG IndexedDB failed, falling back to localStorage:", error)
-      }
+      console.log("⚠️ DEBUG IndexedDB failed, falling back to localStorage:", error)
 
       // Fallback to localStorage if IndexedDB fails
       this.isSupported = false
@@ -349,21 +332,16 @@ class IndexedDBManager {
 
   async getTransactions(): Promise<Transaction[]> {
     // DEBUG: Логирование
-    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-      console.log("📖 DEBUG getTransactions:", {
-        isSupported: this.isSupported
-      })
-    }
+    console.log("📖 DEBUG getTransactions:", {
+      isSupported: this.isSupported
+    })
 
     // Fallback to localStorage if IndexedDB not supported
     if (!this.isSupported) {
       const result = this.getFromLocalStorage<Transaction>("transactions")
-      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        console.log("📖 DEBUG getTransactions from localStorage:", {
-          count: result.length,
-          transactions: result
-        })
-      }
+      console.log("📖 DEBUG getTransactions from localStorage:", {
+        count: result.length
+      })
       return result
     }
 
@@ -375,34 +353,23 @@ class IndexedDBManager {
 
       return new Promise((resolve, reject) => {
         request.onsuccess = (): void => {
-          if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-            console.log("📖 DEBUG getTransactions from IndexedDB:", {
-              count: request.result.length,
-              transactions: request.result
-            })
-          }
+          console.log("📖 DEBUG getTransactions from IndexedDB:", {
+            count: request.result.length
+          })
           resolve(request.result)
         }
         request.onerror = (): void => reject(request.error)
       })
     } catch (error) {
       // DEBUG: Логируем ошибку IndexedDB
-      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        console.log(
-          "⚠️ DEBUG getTransactions IndexedDB failed, falling back to localStorage:",
-          error
-        )
-      }
+      console.log("⚠️ DEBUG getTransactions IndexedDB failed, falling back to localStorage:", error)
 
       // Fallback to localStorage if IndexedDB fails
       this.isSupported = false
       const result = this.getFromLocalStorage<Transaction>("transactions")
-      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        console.log("📖 DEBUG getTransactions fallback result:", {
-          count: result.length,
-          transactions: result
-        })
-      }
+      console.log("📖 DEBUG getTransactions fallback result:", {
+        count: result.length
+      })
       return result
     }
   }
