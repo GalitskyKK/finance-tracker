@@ -72,7 +72,7 @@ class IndexedDBManager {
 
         request.onerror = (): void => {
           this.isSupported = false
-          reject(new Error(`IndexedDB open failed: ${request.error?.message || "Unknown error"}`))
+          reject(new Error(`IndexedDB open failed: ${request.error?.message ?? "Unknown error"}`))
         }
 
         request.onsuccess = (): void => {
@@ -166,7 +166,7 @@ class IndexedDBManager {
   private getFromLocalStorage<T>(table: string): T[] {
     try {
       const data = localStorage.getItem(this.getLocalStorageKey(table))
-      return data ? JSON.parse(data) : []
+      return data ? (JSON.parse(data) as T[]) : []
     } catch {
       return []
     }
