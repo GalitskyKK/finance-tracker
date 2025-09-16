@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import App from "./App.tsx"
 import "./index.css"
 import { registerSW } from "virtual:pwa-register"
+import "./utils/debugStorage" // Debug utils для localStorage
 
 const queryClient = new QueryClient({
   defaultOptions: {
