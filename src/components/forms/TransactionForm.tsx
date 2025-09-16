@@ -3,6 +3,7 @@ import { useForm, Controller } from "react-hook-form"
 import { Select } from "@/components/ui/Select"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
+import { useNetworkStatus } from "@/hooks/useNetworkStatus"
 import { CreateTransactionData } from "@/types"
 import { validateAmount, validateDescription, validateDate } from "@/utils/validators"
 import { formatDateForInput } from "@/utils/formatters"
@@ -20,8 +21,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   isEditing = false,
   transactionId
 }) => {
-  const { addTransaction, updateTransaction, loading } = useTransactionStoreSupabase()
+  const { addTransaction, addTransactionOffline, updateTransaction, loading } =
+    useTransactionStoreSupabase()
   const { getCategoriesByType } = useCategoryStoreSupabase()
+  const { isOnline } = useNetworkStatus()
 
   const {
     handleSubmit,
@@ -59,9 +62,18 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       }
 
       if (isEditing && transactionId) {
+        // Редактирование пока только онлайн
+        if (!isOnline) {
+          throw new Error("Редактирование транзакций доступно только при подключении к интернету")
+        }
         await updateTransaction(transactionId, processedData)
       } else {
-        await addTransaction(processedData)
+        // Создание: онлайн или офлайн
+        if (isOnline) {
+          await addTransaction(processedData)
+        } else {
+          await addTransactionOffline(processedData)
+        }
       }
 
       reset()
@@ -212,15 +224,44 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         {/* Стильные кнопки действий */}
         <div className="border-t border-gray-100 pt-6 space-y-3">
+          {/* Индикатор офлайн режима */}
+          {!isOnline && !isEditing && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <span className="text-amber-800 text-sm font-medium">
+                Офлайн режим: транзакция будет синхронизирована при восстановлении соединения
+              </span>
+            </div>
+          )}
+
+          {/* Предупреждение для редактирования офлайн */}
+          {!isOnline && isEditing && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              <span className="text-red-800 text-sm font-medium">
+                Редактирование недоступно в офлайн режиме
+              </span>
+            </div>
+          )}
+
           {/* Основная кнопка */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/25 transform hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 flex items-center justify-center space-x-2">
+            disabled={loading || (!isOnline && isEditing)}
+            className={`w-full font-semibold py-4 px-6 rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 flex items-center justify-center space-x-2 ${
+              !isOnline && !isEditing
+                ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white hover:shadow-amber-500/25"
+                : "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white hover:shadow-emerald-500/25"
+            } disabled:from-gray-400 disabled:to-gray-500`}>
             {loading ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 <span>Сохранение...</span>
+              </>
+            ) : !isOnline && !isEditing ? (
+              <>
+                <span>Сохранить офлайн</span>
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
               </>
             ) : (
               <span>{isEditing ? "Сохранить изменения" : "Добавить транзакцию"}</span>

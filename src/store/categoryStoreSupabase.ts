@@ -2,17 +2,22 @@ import { create } from "zustand"
 import type { Category } from "@/types"
 import type { SupabaseGlobalCategoryRow } from "@/types/supabase"
 import { supabase } from "@/lib/supabase"
+import { offlineUtils } from "@/hooks/useOfflineSync"
 
 interface CategoryState {
   categories: Category[]
   loading: boolean
   error: string | null
+  isOfflineMode: boolean
+  lastSyncTime: number | null
 
   // Actions
   fetchCategories: () => Promise<void>
+  loadFromCache: () => Promise<void>
   clearError: () => void
   setLoading: (loading: boolean) => void
   setError: (error: string) => void
+  setOfflineMode: (isOffline: boolean) => void
 
   // Getters
   getCategoriesByType: (type: "income" | "expense") => Category[]
@@ -24,10 +29,26 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
   categories: [],
   loading: false,
   error: null,
+  isOfflineMode: false,
+  lastSyncTime: null,
 
   fetchCategories: async (): Promise<void> => {
     set({ loading: true, error: null })
 
+    // Сначала пытаемся загрузить из кэша
+    try {
+      const cachedCategories = await offlineUtils.getCategoriesFromCache()
+      if (cachedCategories.length > 0) {
+        set({
+          categories: cachedCategories,
+          isOfflineMode: false // Временно, проверим сеть далее
+        })
+      }
+    } catch (cacheError) {
+      console.warn("Failed to load categories from cache:", cacheError)
+    }
+
+    // Пытаемся загрузить с сервера
     try {
       const result = await supabase
         .from("global_categories")
@@ -52,15 +73,57 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
         })
       )
 
+      // Сохраняем в кэш для офлайн использования
+      try {
+        await offlineUtils.saveCategoriesToCache(transformedCategories)
+      } catch (cacheError) {
+        console.warn("Failed to save categories to cache:", cacheError)
+      }
+
       set({
         categories: transformedCategories,
-        loading: false
+        loading: false,
+        isOfflineMode: false,
+        lastSyncTime: Date.now()
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to fetch categories"
+
+      // Если есть кэшированные данные, используем их
+      const { categories } = get()
+      if (categories.length > 0) {
+        set({
+          loading: false,
+          isOfflineMode: true,
+          error: null // Не показываем ошибку если есть кэшированные данные
+        })
+      } else {
+        set({
+          error: errorMessage,
+          loading: false,
+          isOfflineMode: true
+        })
+      }
+    }
+  },
+
+  loadFromCache: async (): Promise<void> => {
+    set({ loading: true, error: null })
+
+    try {
+      const cachedCategories = await offlineUtils.getCategoriesFromCache()
+      set({
+        categories: cachedCategories,
+        loading: false,
+        isOfflineMode: true
+      })
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load categories from cache"
       set({
         error: errorMessage,
-        loading: false
+        loading: false,
+        isOfflineMode: true
       })
     }
   },
@@ -68,6 +131,7 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
   clearError: (): void => set({ error: null }),
   setLoading: (loading: boolean): void => set({ loading }),
   setError: (error: string): void => set({ error }),
+  setOfflineMode: (isOffline: boolean): void => set({ isOfflineMode: isOffline }),
 
   getCategoriesByType: (type: "income" | "expense"): Category[] => {
     const { categories } = get()

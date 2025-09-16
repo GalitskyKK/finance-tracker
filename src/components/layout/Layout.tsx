@@ -3,6 +3,7 @@ import { Header } from "./Header"
 import { Sidebar } from "./Sidebar"
 import { BottomNavigation } from "./BottomNavigation"
 import { NetworkStatus } from "@/components/ui/NetworkStatus"
+import { SyncStatus } from "@/components/ui/SyncStatus"
 import { useTransactionFilterStore } from "@/store/transactionFilterStore"
 
 interface LayoutProps {
@@ -47,6 +48,9 @@ export const Layout: React.FC<LayoutProps> = ({
 
       {/* Network Status для отображения офлайн/онлайн статуса */}
       <NetworkStatus />
+
+      {/* Sync Status для отображения статуса синхронизации офлайн данных */}
+      <SyncStatus />
     </div>
   )
 }

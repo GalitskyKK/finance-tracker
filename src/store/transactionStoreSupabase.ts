@@ -1,30 +1,53 @@
 import { create } from "zustand"
 import type { Transaction, CreateTransactionData, SupabaseTransactionRow } from "@/types"
 import { supabase } from "@/lib/supabase"
+import { offlineUtils } from "@/hooks/useOfflineSync"
+import { offlineDataManager } from "@/utils/offlineDataManager"
 
 interface TransactionState {
   transactions: Transaction[]
   loading: boolean
   error: string | null
+  isOfflineMode: boolean
+  lastSyncTime: number | null
 
   // Actions
   fetchTransactions: () => Promise<void>
   addTransaction: (transaction: CreateTransactionData) => Promise<void>
+  addTransactionOffline: (transaction: CreateTransactionData) => Promise<void>
   updateTransaction: (id: string, updates: Partial<CreateTransactionData>) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
+  loadFromCache: () => Promise<void>
   clearError: () => void
   setLoading: (loading: boolean) => void
   setError: (error: string) => void
+  setOfflineMode: (isOffline: boolean) => void
 }
 
 export const useTransactionStoreSupabase = create<TransactionState>((set, get) => ({
   transactions: [],
   loading: false,
   error: null,
+  isOfflineMode: false,
+  lastSyncTime: null,
 
   fetchTransactions: async (): Promise<void> => {
     set({ loading: true, error: null })
 
+    // Сначала загружаем из кэша
+    try {
+      const cachedTransactions = await offlineUtils.getTransactionsFromCache()
+      if (cachedTransactions.length > 0) {
+        set({
+          transactions: cachedTransactions,
+          isOfflineMode: false // Временно, проверим сеть далее
+        })
+      }
+    } catch (cacheError) {
+      console.warn("Failed to load transactions from cache:", cacheError)
+    }
+
+    // Пытаемся загрузить с сервера
     try {
       const { data, error } = await supabase
         .from("transactions")
@@ -45,7 +68,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       if (error) throw error
 
       // Преобразуем данные к нашему формату
-      const transformedTransactions: Transaction[] = (data as SupabaseTransactionRow[]).map(
+      const serverTransactions: Transaction[] = (data as SupabaseTransactionRow[]).map(
         (row: SupabaseTransactionRow) => ({
           id: row.id,
           amount: parseFloat(row.amount),
@@ -58,15 +81,69 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
         })
       )
 
+      // Получаем кэшированные данные для объединения
+      const { transactions: currentTransactions } = get()
+
+      // Объединяем с кэшированными данными, избегая дублирования
+      const mergedTransactions = offlineDataManager.mergeTransactions(
+        currentTransactions,
+        serverTransactions
+      )
+
+      // Сохраняем объединенные данные в кэш
+      try {
+        await offlineUtils.saveTransactionsToCache(mergedTransactions)
+      } catch (cacheError) {
+        console.warn("Failed to save transactions to cache:", cacheError)
+      }
+
+      // Очищаем старые офлайн транзакции
+      await offlineDataManager.cleanupOldOfflineTransactions()
+
       set({
-        transactions: transformedTransactions,
-        loading: false
+        transactions: mergedTransactions,
+        loading: false,
+        isOfflineMode: false,
+        lastSyncTime: Date.now()
       })
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to fetch transactions"
+
+      // Если есть кэшированные данные, используем их
+      const { transactions } = get()
+      if (transactions.length > 0) {
+        set({
+          loading: false,
+          isOfflineMode: true,
+          error: null
+        })
+      } else {
+        set({
+          error: errorMessage,
+          loading: false,
+          isOfflineMode: true
+        })
+      }
+    }
+  },
+
+  loadFromCache: async (): Promise<void> => {
+    set({ loading: true, error: null })
+
+    try {
+      const cachedTransactions = await offlineUtils.getTransactionsFromCache()
+      set({
+        transactions: cachedTransactions,
+        loading: false,
+        isOfflineMode: true
+      })
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load transactions from cache"
       set({
         error: errorMessage,
-        loading: false
+        loading: false,
+        isOfflineMode: true
       })
     }
   },
@@ -213,9 +290,40 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
     }
   },
 
+  addTransactionOffline: async (transactionData: CreateTransactionData): Promise<void> => {
+    set({ loading: true, error: null })
+
+    try {
+      // Используем offlineDataManager для создания офлайн транзакции
+      const offlineTransaction = await offlineDataManager.createOfflineTransaction(transactionData)
+
+      // Добавляем в локальное состояние
+      const { transactions } = get()
+      const updatedTransactions = [offlineTransaction, ...transactions]
+
+      // Обновляем кэш с новыми данными
+      await offlineUtils.saveTransactionsToCache(updatedTransactions)
+
+      set({
+        transactions: updatedTransactions,
+        loading: false,
+        isOfflineMode: true
+      })
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add transaction offline"
+      set({
+        error: errorMessage,
+        loading: false
+      })
+      throw error
+    }
+  },
+
   clearError: (): void => set({ error: null }),
   setLoading: (loading: boolean): void => set({ loading }),
-  setError: (error: string): void => set({ error })
+  setError: (error: string): void => set({ error }),
+  setOfflineMode: (isOffline: boolean): void => set({ isOfflineMode: isOffline })
 }))
 
 // Real-time подписка на изменения транзакций
