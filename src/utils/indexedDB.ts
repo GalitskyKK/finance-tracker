@@ -282,10 +282,12 @@ class IndexedDBManager {
       count: transactions.length,
       isSupported: this.isSupported
     })
+    alert(`🟡 SAVE TRANSACTIONS: count=${transactions.length}, indexedDB=${this.isSupported}`)
 
     // Fallback to localStorage if IndexedDB not supported
     if (!this.isSupported) {
       console.log("🟡 Using localStorage fallback")
+      alert("🟡 USING LOCALSTORAGE FALLBACK")
       this.saveToLocalStorage("transactions", transactions)
       return
     }
@@ -301,6 +303,7 @@ class IndexedDBManager {
 
       return new Promise((resolve, reject) => {
         transaction.oncomplete = (): void => {
+          alert(`🟢 INDEXEDDB SAVED: ${transactions.length} transactions`)
           resolve()
         }
         transaction.onerror = (): void => reject(transaction.error)
