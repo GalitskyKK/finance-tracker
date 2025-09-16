@@ -193,6 +193,13 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       const { transactions } = get()
       const updatedTransactions = [newTransaction, ...transactions]
 
+      // КРИТИЧНО: Сохраняем в кэш для офлайн доступа
+      try {
+        await offlineUtils.saveTransactionsToCache(updatedTransactions)
+      } catch (_cacheError) {
+        // Failed to save to cache, but transaction was saved to server
+      }
+
       set({
         transactions: updatedTransactions,
         loading: false
