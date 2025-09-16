@@ -11,6 +11,11 @@ interface UsePWAInstallReturn {
   showInstallPrompt: () => Promise<void>
 }
 
+// Расширяем Navigator интерфейс для iOS Safari
+interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean
+}
+
 export const usePWAInstall = (): UsePWAInstallReturn => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isInstallable, setIsInstallable] = useState(false)
@@ -18,10 +23,10 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
 
   useEffect(() => {
     // Проверяем, установлено ли уже приложение
-    const checkIfInstalled = () => {
+    const checkIfInstalled = (): void => {
       if (window.matchMedia("(display-mode: standalone)").matches) {
         setIsInstalled(true)
-      } else if ((window.navigator as any).standalone === true) {
+      } else if ((window.navigator as NavigatorWithStandalone).standalone === true) {
         // iOS Safari
         setIsInstalled(true)
       }
@@ -30,24 +35,24 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
     checkIfInstalled()
 
     // Обработчик события beforeinstallprompt
-    const handleBeforeInstallPrompt = (e: Event) => {
+    const handleBeforeInstallPrompt = (e: Event): void => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
       setIsInstallable(true)
     }
 
     // Обработчик события appinstalled
-    const handleAppInstalled = () => {
+    const handleAppInstalled = (): void => {
       setIsInstalled(true)
       setIsInstallable(false)
       setDeferredPrompt(null)
-      console.log("PWA установлено успешно")
+      // PWA установлено успешно
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
     window.addEventListener("appinstalled", handleAppInstalled)
 
-    return () => {
+    return (): void => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
       window.removeEventListener("appinstalled", handleAppInstalled)
     }
@@ -60,9 +65,9 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
     const { outcome } = await deferredPrompt.userChoice
 
     if (outcome === "accepted") {
-      console.log("Пользователь принял установку PWA")
+      // Пользователь принял установку PWA
     } else {
-      console.log("Пользователь отклонил установку PWA")
+      // Пользователь отклонил установку PWA
     }
 
     setDeferredPrompt(null)
