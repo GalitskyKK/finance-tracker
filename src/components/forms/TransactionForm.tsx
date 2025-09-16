@@ -26,6 +26,14 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const { getCategoriesByType } = useCategoryStoreSupabase()
   const { isOnline } = useNetworkStatus()
 
+  // Debug: проверяем что store подключен
+  console.log("🟡 TransactionForm render:", {
+    hasAddTransaction: !!addTransaction,
+    hasAddTransactionOffline: !!addTransactionOffline,
+    isOnline,
+    loading
+  })
+
   const {
     handleSubmit,
     watch,
@@ -54,6 +62,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   }))
 
   const onSubmit = async (data: CreateTransactionData): Promise<void> => {
+    console.log("🟡 TransactionForm onSubmit called:", { data, isOnline, isEditing })
     try {
       // Преобразуем amount в число
       const processedData = {
@@ -63,6 +72,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
       if (isEditing && transactionId) {
         // Редактирование пока только онлайн
+        console.log("🟡 Editing mode, calling updateTransaction")
         if (!isOnline) {
           throw new Error("Редактирование транзакций доступно только при подключении к интернету")
         }
@@ -70,17 +80,20 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       } else {
         // Создание: онлайн или офлайн
         if (isOnline) {
+          console.log("🟡 Online mode, calling addTransaction")
           await addTransaction(processedData)
         } else {
+          console.log("🟡 Offline mode, calling addTransactionOffline")
           await addTransactionOffline(processedData)
         }
       }
 
+      console.log("🟢 TransactionForm success, calling reset and onSuccess")
       reset()
       onSuccess?.()
-    } catch (_error) {
+    } catch (error) {
+      console.error("🔴 TransactionForm error:", error)
       // TODO: Добавить toast уведомление об ошибке
-      // console.error('Ошибка при сохранении транзакции:', error);
     }
   }
 
@@ -248,6 +261,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           <button
             type="submit"
             disabled={loading || (!isOnline && isEditing)}
+            onClick={() =>
+              console.log("🟡 Submit button clicked:", { isOnline, loading, isEditing })
+            }
             className={`w-full font-semibold py-4 px-6 rounded-xl transition-all duration-200 hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 flex items-center justify-center space-x-2 ${
               !isOnline && !isEditing
                 ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white hover:shadow-amber-500/25"

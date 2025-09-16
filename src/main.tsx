@@ -12,6 +12,7 @@ declare global {
     debugStorage: () => any
     testTransactionSave: () => string
     clearStorage: () => string
+    testStore: () => string
   }
 }
 
@@ -72,6 +73,19 @@ if (typeof window !== "undefined") {
       return "✅ Storage cleared"
     } catch (error) {
       return "❌ Clear failed"
+    }
+  }
+
+  // Функция для тестирования store напрямую
+  window.testStore = () => {
+    try {
+      // @ts-ignore - тестируем store напрямую
+      const store = window.__TRANSACTION_STORE__ || {}
+      console.log("Store methods:", Object.keys(store))
+      return "Store test completed"
+    } catch (error) {
+      console.error("Store test error:", error)
+      return "Store test failed"
     }
   }
 }
