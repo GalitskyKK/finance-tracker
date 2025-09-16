@@ -10,7 +10,9 @@ export const SyncStatus: React.FC = () => {
 
   const handleSyncClick = (): void => {
     if (isOnline && !syncStatus.isSyncing) {
-      syncNow().catch(console.error)
+      syncNow().catch((_error): void => {
+        // Sync failed, will be retried later
+      })
     }
   }
 

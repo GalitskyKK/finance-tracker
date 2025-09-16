@@ -10,25 +10,25 @@ export const useNetworkStatus = (): NetworkStatus => {
   const [wasOffline, setWasOffline] = useState(false)
 
   useEffect(() => {
-    const handleOnline = () => {
+    const handleOnline = (): void => {
       setIsOnline(true)
       // Показываем уведомление о восстановлении соединения только если были офлайн
       if (wasOffline) {
         setWasOffline(false)
-        console.log("Соединение с интернетом восстановлено")
+        // Connection restored
       }
     }
 
-    const handleOffline = () => {
+    const handleOffline = (): void => {
       setIsOnline(false)
       setWasOffline(true)
-      console.log("Потеряно соединение с интернетом. Приложение работает в офлайн режиме")
+      // Lost internet connection, app working offline
     }
 
     window.addEventListener("online", handleOnline)
     window.addEventListener("offline", handleOffline)
 
-    return () => {
+    return (): void => {
       window.removeEventListener("online", handleOnline)
       window.removeEventListener("offline", handleOffline)
     }

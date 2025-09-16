@@ -43,8 +43,8 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
           isOfflineMode: false // Временно, проверим сеть далее
         })
       }
-    } catch (cacheError) {
-      console.warn("Failed to load transactions from cache:", cacheError)
+    } catch (_cacheError) {
+      // Failed to load transactions from cache
     }
 
     // Пытаемся загрузить с сервера
@@ -93,8 +93,8 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       // Сохраняем объединенные данные в кэш
       try {
         await offlineUtils.saveTransactionsToCache(mergedTransactions)
-      } catch (cacheError) {
-        console.warn("Failed to save transactions to cache:", cacheError)
+      } catch (_cacheError) {
+        // Failed to save transactions to cache
       }
 
       // Очищаем старые офлайн транзакции

@@ -32,13 +32,13 @@ class IndexedDBManager {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.version)
 
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => {
+      request.onerror = (): void => reject(request.error)
+      request.onsuccess = (): void => {
         this.db = request.result
         resolve()
       }
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = (event: IDBVersionChangeEvent): void => {
         const db = (event.target as IDBOpenDBRequest).result
 
         // Создаем stores если их нет
@@ -87,8 +87,8 @@ class IndexedDBManager {
     }
 
     return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve()
-      transaction.onerror = () => reject(transaction.error)
+      transaction.oncomplete = (): void => resolve()
+      transaction.onerror = (): void => reject(transaction.error)
     })
   }
 
@@ -99,8 +99,8 @@ class IndexedDBManager {
     const request = store.getAll()
 
     return new Promise((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result)
-      request.onerror = () => reject(request.error)
+      request.onsuccess = (): void => resolve(request.result)
+      request.onerror = (): void => reject(request.error)
     })
   }
 
@@ -111,8 +111,8 @@ class IndexedDBManager {
     store.put(category)
 
     return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve()
-      transaction.onerror = () => reject(transaction.error)
+      transaction.oncomplete = (): void => resolve()
+      transaction.onerror = (): void => reject(transaction.error)
     })
   }
 
@@ -128,8 +128,8 @@ class IndexedDBManager {
     }
 
     return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve()
-      transaction.onerror = () => reject(transaction.error)
+      transaction.oncomplete = (): void => resolve()
+      transaction.onerror = (): void => reject(transaction.error)
     })
   }
 
@@ -140,8 +140,8 @@ class IndexedDBManager {
     const request = store.getAll()
 
     return new Promise((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result)
-      request.onerror = () => reject(request.error)
+      request.onsuccess = (): void => resolve(request.result)
+      request.onerror = (): void => reject(request.error)
     })
   }
 
@@ -152,8 +152,8 @@ class IndexedDBManager {
     const request = store.get(id)
 
     return new Promise((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result || null)
-      request.onerror = () => reject(request.error)
+      request.onsuccess = (): void => resolve((request.result as Transaction) ?? null)
+      request.onerror = (): void => reject(request.error)
     })
   }
 
@@ -164,8 +164,8 @@ class IndexedDBManager {
     store.put(transaction)
 
     return new Promise((resolve, reject) => {
-      dbTransaction.oncomplete = () => resolve()
-      dbTransaction.onerror = () => reject(dbTransaction.error)
+      dbTransaction.oncomplete = (): void => resolve()
+      dbTransaction.onerror = (): void => reject(dbTransaction.error)
     })
   }
 
@@ -176,8 +176,8 @@ class IndexedDBManager {
     store.delete(id)
 
     return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve()
-      transaction.onerror = () => reject(transaction.error)
+      transaction.oncomplete = (): void => resolve()
+      transaction.onerror = (): void => reject(transaction.error)
     })
   }
 
@@ -195,8 +195,8 @@ class IndexedDBManager {
     store.add(operationWithId)
 
     return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve(operationWithId.id)
-      transaction.onerror = () => reject(transaction.error)
+      transaction.oncomplete = (): void => resolve(operationWithId.id)
+      transaction.onerror = (): void => reject(transaction.error)
     })
   }
 
@@ -208,8 +208,8 @@ class IndexedDBManager {
     const request = index.getAll(IDBKeyRange.only(false)) // Только не синхронизированные
 
     return new Promise((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result)
-      request.onerror = () => reject(request.error)
+      request.onsuccess = (): void => resolve(request.result)
+      request.onerror = (): void => reject(request.error)
     })
   }
 
@@ -221,18 +221,18 @@ class IndexedDBManager {
     const getRequest = store.get(operationId)
 
     return new Promise((resolve, reject) => {
-      getRequest.onsuccess = () => {
-        const operation = getRequest.result
+      getRequest.onsuccess = (): void => {
+        const operation = getRequest.result as OfflineOperation | undefined
         if (operation) {
           operation.synced = true
           const putRequest = store.put(operation)
-          putRequest.onsuccess = () => resolve()
-          putRequest.onerror = () => reject(putRequest.error)
+          putRequest.onsuccess = (): void => resolve()
+          putRequest.onerror = (): void => reject(putRequest.error)
         } else {
           resolve()
         }
       }
-      getRequest.onerror = () => reject(getRequest.error)
+      getRequest.onerror = (): void => reject(getRequest.error)
     })
   }
 
@@ -244,8 +244,8 @@ class IndexedDBManager {
     const request = index.openCursor(IDBKeyRange.only(true)) // Только синхронизированные
 
     return new Promise((resolve, reject) => {
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result
+      request.onsuccess = (event: Event): void => {
+        const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null
         if (cursor) {
           store.delete(cursor.primaryKey)
           cursor.continue()
@@ -253,7 +253,7 @@ class IndexedDBManager {
           resolve()
         }
       }
-      request.onerror = () => reject(request.error)
+      request.onerror = (): void => reject(request.error)
     })
   }
 
@@ -270,8 +270,8 @@ class IndexedDBManager {
     })
 
     return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve()
-      transaction.onerror = () => reject(transaction.error)
+      transaction.oncomplete = (): void => resolve()
+      transaction.onerror = (): void => reject(transaction.error)
     })
   }
 
@@ -282,11 +282,11 @@ class IndexedDBManager {
     const request = store.get("lastSync")
 
     return new Promise((resolve, reject) => {
-      request.onsuccess = () => {
-        const result = request.result
+      request.onsuccess = (): void => {
+        const result = request.result as { value: number } | undefined
         resolve(result ? result.value : null)
       }
-      request.onerror = () => reject(request.error)
+      request.onerror = (): void => reject(request.error)
     })
   }
 
@@ -305,8 +305,8 @@ class IndexedDBManager {
     transaction.objectStore("metadata").clear()
 
     return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve()
-      transaction.onerror = () => reject(transaction.error)
+      transaction.oncomplete = (): void => resolve()
+      transaction.onerror = (): void => reject(transaction.error)
     })
   }
 
@@ -315,8 +315,8 @@ class IndexedDBManager {
       const categories = await this.getCategories()
       const transactions = await this.getTransactions()
       return categories.length > 0 || transactions.length > 0
-    } catch (error) {
-      console.error("Error checking data availability:", error)
+    } catch (_error) {
+      // Error checking data availability
       return false
     }
   }

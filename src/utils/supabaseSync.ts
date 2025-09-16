@@ -54,45 +54,52 @@ export class SupabaseSync {
 
     switch (type) {
       case "create": {
-        const transactionData = data as CreateTransactionData & { tempId?: string }
+        const createTransactionData = data as CreateTransactionData & { tempId?: string }
 
         // Проверяем что категория существует
         const { data: categoryExists } = await supabase
           .from("global_categories")
           .select("id")
-          .eq("id", transactionData.categoryId)
+          .eq("id", createTransactionData.categoryId)
           .single()
 
         if (!categoryExists) {
-          throw new Error(`Category ${transactionData.categoryId} not found`)
+          throw new Error(`Category ${createTransactionData.categoryId} not found`)
         }
 
         // Создаем транзакцию в Supabase
-        const { data: newTransaction, error } = await supabase
+        const result = await supabase
           .from("transactions")
           .insert({
             user_id: user.id,
-            amount: transactionData.amount,
-            type: transactionData.type,
-            category_id: transactionData.categoryId,
-            description: transactionData.description,
-            date: transactionData.date
+            amount: createTransactionData.amount,
+            type: createTransactionData.type,
+            category_id: createTransactionData.categoryId,
+            description: createTransactionData.description,
+            date: createTransactionData.date
           })
           .select()
           .single()
 
-        if (error) throw error
+        if (result.error) throw result.error
+
+        // Type guard для проверки data
+        const transactionData = result.data as Record<string, unknown> | null
+        if (!transactionData) throw new Error("No data returned from insert")
+
+        // Safe type assertion
+        const transactionId = transactionData.id as string
 
         return {
           success: true,
-          newId: newTransaction.id // Возвращаем реальный ID для замены временного
+          newId: transactionId // Возвращаем реальный ID для замены временного
         }
       }
 
       case "update": {
         const updateData = data as Partial<CreateTransactionData> & { id: string }
 
-        const updatePayload: Record<string, any> = {}
+        const updatePayload: Record<string, unknown> = {}
         if (updateData.amount !== undefined) updatePayload.amount = updateData.amount
         if (updateData.type !== undefined) updatePayload.type = updateData.type
         if (updateData.categoryId !== undefined) updatePayload.category_id = updateData.categoryId

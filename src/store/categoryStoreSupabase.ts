@@ -44,8 +44,8 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
           isOfflineMode: false // Временно, проверим сеть далее
         })
       }
-    } catch (cacheError) {
-      console.warn("Failed to load categories from cache:", cacheError)
+    } catch (_cacheError) {
+      // Failed to load categories from cache
     }
 
     // Пытаемся загрузить с сервера
@@ -76,8 +76,8 @@ export const useCategoryStoreSupabase = create<CategoryState>((set, get) => ({
       // Сохраняем в кэш для офлайн использования
       try {
         await offlineUtils.saveCategoriesToCache(transformedCategories)
-      } catch (cacheError) {
-        console.warn("Failed to save categories to cache:", cacheError)
+      } catch (_cacheError) {
+        // Failed to save categories to cache
       }
 
       set({

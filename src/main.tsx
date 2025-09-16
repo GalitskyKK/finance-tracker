@@ -21,7 +21,7 @@ const updateSW = registerSW({
     }
   },
   onOfflineReady() {
-    console.log("Приложение готово к работе офлайн")
+    // Приложение готово к работе офлайн
   }
 })
 
