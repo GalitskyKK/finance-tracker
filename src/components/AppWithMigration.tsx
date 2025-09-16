@@ -50,17 +50,21 @@ export const AppWithMigration: React.FC = () => {
       try {
         // Initializing data for user
 
+        console.log(`🔄 Initializing data in ${isOnline ? "ONLINE" : "OFFLINE"} mode`)
+
         if (isOnline) {
           // Онлайн: загружаем данные с сервера (fetchTransactions сначала загрузит кэш, потом сервер)
           await Promise.all([fetchCategories(), fetchTransactions()])
+          console.log("✅ Online data loaded")
         } else {
           // Офлайн: загружаем только из кэша
-
           try {
             // Загружаем категории из кэша
             const { loadFromCache: loadCategoriesFromCache } = useCategoryStoreSupabase.getState()
             await Promise.all([loadCategoriesFromCache(), loadFromCache()])
+            console.log("✅ Offline data loaded from cache")
           } catch (error) {
+            console.error("❌ Offline loading failed:", error)
             // Failed to load from cache in offline mode - try individual loads
             try {
               await loadFromCache()

@@ -179,18 +179,13 @@ class IndexedDBManager {
   }
 
   private saveToLocalStorage<T>(table: string, data: T[]): void {
-    console.log("🟡 saveToLocalStorage called:", { table, count: data.length })
-    alert(`🟡 SAVING TO LOCALSTORAGE: ${table}, count: ${data.length}`)
-
     try {
       const key = this.getLocalStorageKey(table)
       const serialized = JSON.stringify(data)
       localStorage.setItem(key, serialized)
-      console.log("🟢 saveToLocalStorage success:", { key, dataLength: serialized.length })
-      alert(`🟢 SAVED TO LOCALSTORAGE: ${key}, size: ${serialized.length}`)
+      console.log(`✅ localStorage saved: ${data.length} ${table}`)
     } catch (error) {
-      console.error("🔴 saveToLocalStorage error:", error)
-      alert(`🔴 LOCALSTORAGE ERROR: ${error}`)
+      console.error(`❌ localStorage error:`, error)
       throw new Error(
         `Failed to save to localStorage: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -282,12 +277,10 @@ class IndexedDBManager {
       count: transactions.length,
       isSupported: this.isSupported
     })
-    alert(`🟡 SAVE TRANSACTIONS: count=${transactions.length}, indexedDB=${this.isSupported}`)
 
-    // Fallback to localStorage if IndexedDB not supported
+    // УПРОЩЕНО: Всегда пытаемся IndexedDB, fallback в catch
     if (!this.isSupported) {
-      console.log("🟡 Using localStorage fallback")
-      alert("🟡 USING LOCALSTORAGE FALLBACK")
+      // Если изначально не поддерживается, используем localStorage
       this.saveToLocalStorage("transactions", transactions)
       return
     }
@@ -303,7 +296,7 @@ class IndexedDBManager {
 
       return new Promise((resolve, reject) => {
         transaction.oncomplete = (): void => {
-          alert(`🟢 INDEXEDDB SAVED: ${transactions.length} transactions`)
+          console.log(`✅ IndexedDB saved: ${transactions.length} transactions`)
           resolve()
         }
         transaction.onerror = (): void => reject(transaction.error)
@@ -329,14 +322,18 @@ class IndexedDBManager {
 
       return new Promise((resolve, reject) => {
         request.onsuccess = (): void => {
+          console.log(`📦 IndexedDB loaded: ${request.result.length} transactions`)
           resolve(request.result)
         }
         request.onerror = (): void => reject(request.error)
       })
     } catch (error) {
       // Fallback to localStorage if IndexedDB fails
+      console.warn("⚠️ IndexedDB failed, falling back to localStorage:", error)
       this.isSupported = false
-      return this.getFromLocalStorage<Transaction>("transactions")
+      const result = this.getFromLocalStorage<Transaction>("transactions")
+      console.log(`📁 localStorage loaded: ${result.length} transactions`)
+      return result
     }
   }
 

@@ -265,7 +265,10 @@ export const offlineUtils = {
 
   // Получение транзакций из офлайн хранилища
   getTransactionsFromCache: async (): Promise<Transaction[]> => {
-    return await indexedDBManager.getTransactions()
+    console.log("📦 Getting transactions from cache...")
+    const result = await indexedDBManager.getTransactions()
+    console.log(`📦 Retrieved ${result.length} transactions from cache`)
+    return result
   },
 
   // Сохранение новой транзакции офлайн (для последующей синхронизации)

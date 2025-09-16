@@ -32,18 +32,25 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
   lastSyncTime: null,
 
   fetchTransactions: async (): Promise<void> => {
+    console.log("🔄 Fetching transactions...")
     set({ loading: true, error: null })
 
     // Сначала загружаем из кэша
     try {
       const cachedTransactions = await offlineUtils.getTransactionsFromCache()
+      console.log(`📦 Cache loaded: ${cachedTransactions.length} transactions`)
+
       if (cachedTransactions.length > 0) {
         set({
           transactions: cachedTransactions,
           isOfflineMode: false // Временно, проверим сеть далее
         })
+        console.log(`✅ Cache data set to store: ${cachedTransactions.length} transactions`)
+      } else {
+        console.log("⚠️ No cached transactions found")
       }
-    } catch (_cacheError) {
+    } catch (cacheError) {
+      console.error("❌ Cache loading failed:", cacheError)
       // Failed to load transactions from cache
     }
 
@@ -151,8 +158,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
   },
 
   addTransaction: async (transactionData: CreateTransactionData): Promise<void> => {
-    console.log("🟡 addTransaction called:", transactionData)
-    alert(`🟡 ADD TRANSACTION ONLINE: ${transactionData.description}`)
+    console.log("💾 Adding transaction online:", transactionData.description)
     set({ loading: true, error: null })
 
     try {
@@ -198,12 +204,11 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       const updatedTransactions = [newTransaction, ...transactions]
 
       // КРИТИЧНО: Сохраняем в кэш для офлайн доступа
-      alert(`🟡 CACHING ${updatedTransactions.length} TRANSACTIONS`)
       try {
         await offlineUtils.saveTransactionsToCache(updatedTransactions)
-        alert(`🟢 CACHING SUCCESS`)
+        console.log(`✅ Transaction cached for offline access`)
       } catch (cacheError) {
-        alert(`🔴 CACHING FAILED: ${cacheError}`)
+        console.error("❌ Caching failed:", cacheError)
         // Failed to save to cache, but transaction was saved to server
       }
 
@@ -310,8 +315,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
   },
 
   addTransactionOffline: async (transactionData: CreateTransactionData): Promise<void> => {
-    console.log("🟡 addTransactionOffline called:", transactionData)
-    alert(`🟡 ADD TRANSACTION OFFLINE: ${transactionData.description}`)
+    console.log("📱 Adding transaction offline:", transactionData.description)
     set({ loading: true, error: null })
 
     try {

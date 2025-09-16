@@ -6,10 +6,8 @@ import "./index.css"
 import { registerSW } from "virtual:pwa-register"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-// КРИТИЧНО: Проверяем что JavaScript вообще загружается
-console.log("🚀 main.tsx loaded!")
+console.log("🚀 Finance Tracker starting...")
 console.log("🚀 React version:", React.version)
-alert("🚀 JS LOADED! Check console for logs")
 
 // Типы для debugStorage
 declare global {
@@ -23,23 +21,93 @@ declare global {
 
 // Минимальная версия debugStorage для диагностики
 if (typeof window !== "undefined") {
-  window.debugStorage = () => {
+  window.debugStorage = async () => {
     try {
-      const transactions = localStorage.getItem("finance-tracker-transactions")
-      const categories = localStorage.getItem("finance-tracker-categories")
+      // Проверяем localStorage
+      const localTransactions = localStorage.getItem("finance-tracker-transactions")
+      const localCategories = localStorage.getItem("finance-tracker-categories")
 
-      const result = {
-        transactions: !!transactions,
-        categories: !!categories,
-        transactionsLength: transactions?.length || 0,
-        categoriesLength: categories?.length || 0,
-        localStorage: typeof localStorage,
-        window: typeof window,
-        transactionsData: transactions ? transactions.substring(0, 100) + "..." : null,
-        categoriesData: categories ? categories.substring(0, 100) + "..." : null
+      // Проверяем IndexedDB
+      let indexedDBTransactions = 0
+      let indexedDBCategories = 0
+      let indexedDBSupported = false
+
+      try {
+        const indexedDB = window.indexedDB
+        if (indexedDB) {
+          indexedDBSupported = true
+
+          // Пытаемся открыть нашу БД
+          const dbRequest = indexedDB.open("FinanceTrackerDB", 2)
+
+          await new Promise((resolve) => {
+            dbRequest.onsuccess = async () => {
+              try {
+                const db = dbRequest.result
+
+                if (db.objectStoreNames.contains("transactions")) {
+                  const transactionStore = db
+                    .transaction(["transactions"], "readonly")
+                    .objectStore("transactions")
+                  const transactionRequest = transactionStore.getAll()
+
+                  transactionRequest.onsuccess = () => {
+                    indexedDBTransactions = transactionRequest.result.length
+
+                    if (db.objectStoreNames.contains("categories")) {
+                      const categoryStore = db
+                        .transaction(["categories"], "readonly")
+                        .objectStore("categories")
+                      const categoryRequest = categoryStore.getAll()
+
+                      categoryRequest.onsuccess = () => {
+                        indexedDBCategories = categoryRequest.result.length
+                        resolve(true)
+                      }
+                      categoryRequest.onerror = () => resolve(true)
+                    } else {
+                      resolve(true)
+                    }
+                  }
+                  transactionRequest.onerror = () => resolve(true)
+                } else {
+                  resolve(true)
+                }
+
+                db.close()
+              } catch (error) {
+                resolve(true)
+              }
+            }
+            dbRequest.onerror = () => resolve(true)
+            dbRequest.onblocked = () => resolve(true)
+          })
+        }
+      } catch (error) {
+        console.log("IndexedDB check error:", error)
       }
 
-      console.log("🔍 SIMPLE DEBUG:", result)
+      const result = {
+        localStorage: {
+          transactions: !!localTransactions,
+          categories: !!localCategories,
+          transactionsLength: localTransactions?.length || 0,
+          categoriesLength: localCategories?.length || 0
+        },
+        indexedDB: {
+          supported: indexedDBSupported,
+          transactions: indexedDBTransactions,
+          categories: indexedDBCategories
+        },
+        summary: {
+          totalTransactions:
+            indexedDBTransactions || (localTransactions ? JSON.parse(localTransactions).length : 0),
+          dataLocation:
+            indexedDBTransactions > 0 ? "IndexedDB" : localTransactions ? "localStorage" : "none"
+        }
+      }
+
+      console.log("🔍 COMPLETE DEBUG:", result)
       return result
     } catch (error) {
       console.error("❌ debugStorage error:", error)
@@ -115,26 +183,12 @@ const updateSW = registerSW({
   }
 })
 
-console.log("🚀 Starting React app...")
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </React.StrictMode>
+)
 
-try {
-  const rootElement = document.getElementById("root")
-  console.log("🚀 Root element found:", !!rootElement)
-
-  const root = ReactDOM.createRoot(rootElement!)
-  console.log("🚀 React root created")
-
-  root.render(
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </React.StrictMode>
-  )
-
-  console.log("🚀 React app rendered!")
-  alert("🚀 REACT STARTED! App should be visible")
-} catch (error) {
-  console.error("🔴 CRITICAL: React app failed to start:", error)
-  alert("🔴 REACT FAILED: " + error)
-}
+console.log("✅ Finance Tracker started")
