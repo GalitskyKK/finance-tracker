@@ -62,11 +62,12 @@ export const PieChart: React.FC<PieChartProps> = ({
     payload?: Array<{
       name: string
       value: number
-      payload: { percent: number; color: string }
+      payload: { percent?: number; color: string }
     }>
   }): React.ReactElement | null => {
     if (active && payload?.length) {
       const data = payload[0]
+      const percent = data.payload.percent ?? 0
       return (
         <div className="bg-white/95 backdrop-blur-sm p-4 border border-gray-200/60 rounded-2xl shadow-2xl shadow-gray-900/10 animate-slide-up">
           <div className="flex items-center space-x-3 mb-3">
@@ -86,15 +87,13 @@ export const PieChart: React.FC<PieChartProps> = ({
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Доля:</span>
               <div className="flex items-center space-x-2">
-                <span className="font-bold text-emerald-600 text-lg">
-                  {data.payload.percent.toFixed(1)}%
-                </span>
+                <span className="font-bold text-emerald-600 text-lg">{percent.toFixed(1)}%</span>
                 <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-300"
                     style={{
                       backgroundColor: data.payload.color,
-                      width: `${Math.min(data.payload.percent, 100)}%`
+                      width: `${Math.min(percent, 100)}%`
                     }}
                   />
                 </div>
@@ -114,14 +113,15 @@ export const PieChart: React.FC<PieChartProps> = ({
     cx: number
     cy: number
     midAngle: number
-    percent: number
+    percent?: number
   }): React.ReactElement => {
     const RADIAN = Math.PI / 180
     const radius = entry.innerRadius + (entry.outerRadius - entry.innerRadius) * 0.7
     const x = entry.cx + radius * Math.cos(-entry.midAngle * RADIAN)
     const y = entry.cy + radius * Math.sin(-entry.midAngle * RADIAN)
 
-    if (entry.percent < 5) return <></>
+    const percent = entry.percent ?? 0
+    if (percent < 5) return <></>
 
     return (
       <g>
@@ -134,7 +134,7 @@ export const PieChart: React.FC<PieChartProps> = ({
           dominantBaseline="central"
           fontSize={13}
           fontWeight="700">
-          {`${entry.percent.toFixed(0)}%`}
+          {`${percent.toFixed(0)}%`}
         </text>
         {/* Основной текст */}
         <text
@@ -146,7 +146,7 @@ export const PieChart: React.FC<PieChartProps> = ({
           fontSize={13}
           fontWeight="700"
           style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))" }}>
-          {`${entry.percent.toFixed(0)}%`}
+          {`${percent.toFixed(0)}%`}
         </text>
       </g>
     )
