@@ -25,7 +25,7 @@ type OfflineOperation = OfflineTransactionOperation | OfflineCategoryOperation
 
 class IndexedDBManager {
   private dbName = "finance-tracker-db"
-  private version = 1
+  private version = 2 // Увеличиваем версию для исправления схемы
   private db: IDBDatabase | null = null
   private isSupported = true
   private initAttempted = false
@@ -45,6 +45,11 @@ class IndexedDBManager {
       testRequest.onerror = (): void => {
         this.isSupported = false
       }
+      // Удаляем тестовую базу сразу
+      testRequest.onsuccess = (): void => {
+        testRequest.result.close()
+        indexedDB.deleteDatabase("_test_")
+      }
       return true
     } catch {
       return false
@@ -53,9 +58,8 @@ class IndexedDBManager {
 
   async init(): Promise<void> {
     if (this.initAttempted) {
-      if (!this.isSupported) {
-        throw new Error("IndexedDB not supported in this environment")
-      }
+      // Если уже пытались инициализировать, просто возвращаемся
+      // Fallback на localStorage будет использован автоматически
       return
     }
 
@@ -63,7 +67,8 @@ class IndexedDBManager {
 
     if (!this.checkIndexedDBSupport()) {
       this.isSupported = false
-      throw new Error("IndexedDB not supported or blocked in PWA context")
+      // Не выбрасываем ошибку, просто используем fallback
+      return Promise.resolve()
     }
 
     return new Promise((resolve, reject) => {
@@ -71,8 +76,26 @@ class IndexedDBManager {
         const request = indexedDB.open(this.dbName, this.version)
 
         request.onerror = (): void => {
+          // Если ошибка связана с конфликтом данных, пытаемся пересоздать базу
+          const errorMessage = request.error?.message ?? "Unknown error"
+          if (errorMessage.includes("Data provided to an operation does not meet requirements")) {
+            // Удаляем старую базу и пытаемся создать заново
+            indexedDB.deleteDatabase(this.dbName)
+            // Повторная попытка через небольшую задержку
+            setTimeout(() => {
+              this.initAttempted = false
+              this.init()
+                .then(resolve)
+                .catch(() => {
+                  this.isSupported = false
+                  resolve() // Не выбрасываем ошибку, используем fallback
+                })
+            }, 100)
+            return
+          }
+
           this.isSupported = false
-          reject(new Error(`IndexedDB open failed: ${request.error?.message ?? "Unknown error"}`))
+          resolve() // Не выбрасываем ошибку для других случаев, используем fallback
         }
 
         request.onsuccess = (): void => {
@@ -83,30 +106,34 @@ class IndexedDBManager {
 
         request.onupgradeneeded = (event: IDBVersionChangeEvent): void => {
           const db = (event.target as IDBOpenDBRequest).result
+          const oldVersion = event.oldVersion
 
-          // Создаем stores если их нет
-          if (!db.objectStoreNames.contains("categories")) {
-            const categoryStore = db.createObjectStore("categories", { keyPath: "id" })
-            categoryStore.createIndex("type", "type", { unique: false })
-            categoryStore.createIndex("name", "name", { unique: false })
+          // Удаляем старые stores если они существуют (для пересоздания схемы)
+          if (oldVersion > 0) {
+            // Удаляем все старые object stores для чистого обновления
+            const storeNames = Array.from(db.objectStoreNames)
+            storeNames.forEach((storeName) => {
+              if (db.objectStoreNames.contains(storeName)) {
+                db.deleteObjectStore(storeName)
+              }
+            })
           }
 
-          if (!db.objectStoreNames.contains("transactions")) {
-            const transactionStore = db.createObjectStore("transactions", { keyPath: "id" })
-            transactionStore.createIndex("categoryId", "categoryId", { unique: false })
-            transactionStore.createIndex("type", "type", { unique: false })
-            transactionStore.createIndex("date", "date", { unique: false })
-          }
+          // Создаем новые stores с правильной схемой
+          const categoryStore = db.createObjectStore("categories", { keyPath: "id" })
+          categoryStore.createIndex("type", "type", { unique: false })
+          categoryStore.createIndex("name", "name", { unique: false })
 
-          if (!db.objectStoreNames.contains("offlineQueue")) {
-            const queueStore = db.createObjectStore("offlineQueue", { keyPath: "id" })
-            queueStore.createIndex("synced", "synced", { unique: false })
-            queueStore.createIndex("timestamp", "timestamp", { unique: false })
-          }
+          const transactionStore = db.createObjectStore("transactions", { keyPath: "id" })
+          transactionStore.createIndex("categoryId", "categoryId", { unique: false })
+          transactionStore.createIndex("type", "type", { unique: false })
+          transactionStore.createIndex("date", "date", { unique: false })
 
-          if (!db.objectStoreNames.contains("metadata")) {
-            db.createObjectStore("metadata", { keyPath: "key" })
-          }
+          const queueStore = db.createObjectStore("offlineQueue", { keyPath: "id" })
+          queueStore.createIndex("synced", "synced", { unique: false })
+          queueStore.createIndex("timestamp", "timestamp", { unique: false })
+
+          db.createObjectStore("metadata", { keyPath: "key" })
         }
 
         // Таймаут для случаев когда IndexedDB висит

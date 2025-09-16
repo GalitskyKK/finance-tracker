@@ -65,13 +65,26 @@ export const useOfflineSync = (): UseOfflineSyncReturn => {
           lastSyncTime: lastSync,
           pendingOperations: queue.length
         }))
-      } catch (error) {
-        // Failed to initialize IndexedDB - provide detailed error for PWA debugging
-        const errorMessage = error instanceof Error ? error.message : "Unknown error"
-        setSyncStatus((prev) => ({
-          ...prev,
-          error: `Офлайн хранилище недоступно: ${errorMessage}. Будет использован временный режим.`
-        }))
+      } catch {
+        // Failed to initialize IndexedDB - check if localStorage fallback works
+        try {
+          // Проверяем работоспособность localStorage
+          localStorage.setItem("_finance_tracker_test_", "test")
+          localStorage.removeItem("_finance_tracker_test_")
+
+          // localStorage работает, не показываем ошибку пользователю
+          // Приложение продолжит работать с localStorage fallback
+          setSyncStatus((prev) => ({
+            ...prev,
+            error: null // Не показываем техническую ошибку если fallback работает
+          }))
+        } catch {
+          // И localStorage недоступен - показываем ошибку
+          setSyncStatus((prev) => ({
+            ...prev,
+            error: "Офлайн режим недоступен. Данные не будут сохраняться между сессиями."
+          }))
+        }
       }
     }
 
