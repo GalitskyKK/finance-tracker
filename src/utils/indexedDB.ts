@@ -27,81 +27,201 @@ class IndexedDBManager {
   private dbName = "finance-tracker-db"
   private version = 1
   private db: IDBDatabase | null = null
+  private isSupported = true
+  private initAttempted = false
+
+  private checkIndexedDBSupport(): boolean {
+    if (typeof window === "undefined") return false
+
+    // Проверяем базовую поддержку
+    if (!window.indexedDB) {
+      return false
+    }
+
+    // Проверяем доступность в текущем контексте (PWA может блокировать)
+    try {
+      // Пытаемся создать простой запрос
+      const testRequest = indexedDB.open("_test_", 1)
+      testRequest.onerror = (): void => {
+        this.isSupported = false
+      }
+      return true
+    } catch {
+      return false
+    }
+  }
 
   async init(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.version)
-
-      request.onerror = (): void => reject(request.error)
-      request.onsuccess = (): void => {
-        this.db = request.result
-        resolve()
+    if (this.initAttempted) {
+      if (!this.isSupported) {
+        throw new Error("IndexedDB not supported in this environment")
       }
+      return
+    }
 
-      request.onupgradeneeded = (event: IDBVersionChangeEvent): void => {
-        const db = (event.target as IDBOpenDBRequest).result
+    this.initAttempted = true
 
-        // Создаем stores если их нет
-        if (!db.objectStoreNames.contains("categories")) {
-          const categoryStore = db.createObjectStore("categories", { keyPath: "id" })
-          categoryStore.createIndex("type", "type", { unique: false })
-          categoryStore.createIndex("name", "name", { unique: false })
+    if (!this.checkIndexedDBSupport()) {
+      this.isSupported = false
+      throw new Error("IndexedDB not supported or blocked in PWA context")
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const request = indexedDB.open(this.dbName, this.version)
+
+        request.onerror = (): void => {
+          this.isSupported = false
+          reject(new Error(`IndexedDB open failed: ${request.error?.message || "Unknown error"}`))
         }
 
-        if (!db.objectStoreNames.contains("transactions")) {
-          const transactionStore = db.createObjectStore("transactions", { keyPath: "id" })
-          transactionStore.createIndex("categoryId", "categoryId", { unique: false })
-          transactionStore.createIndex("type", "type", { unique: false })
-          transactionStore.createIndex("date", "date", { unique: false })
+        request.onsuccess = (): void => {
+          this.db = request.result
+          this.isSupported = true
+          resolve()
         }
 
-        if (!db.objectStoreNames.contains("offlineQueue")) {
-          const queueStore = db.createObjectStore("offlineQueue", { keyPath: "id" })
-          queueStore.createIndex("synced", "synced", { unique: false })
-          queueStore.createIndex("timestamp", "timestamp", { unique: false })
+        request.onupgradeneeded = (event: IDBVersionChangeEvent): void => {
+          const db = (event.target as IDBOpenDBRequest).result
+
+          // Создаем stores если их нет
+          if (!db.objectStoreNames.contains("categories")) {
+            const categoryStore = db.createObjectStore("categories", { keyPath: "id" })
+            categoryStore.createIndex("type", "type", { unique: false })
+            categoryStore.createIndex("name", "name", { unique: false })
+          }
+
+          if (!db.objectStoreNames.contains("transactions")) {
+            const transactionStore = db.createObjectStore("transactions", { keyPath: "id" })
+            transactionStore.createIndex("categoryId", "categoryId", { unique: false })
+            transactionStore.createIndex("type", "type", { unique: false })
+            transactionStore.createIndex("date", "date", { unique: false })
+          }
+
+          if (!db.objectStoreNames.contains("offlineQueue")) {
+            const queueStore = db.createObjectStore("offlineQueue", { keyPath: "id" })
+            queueStore.createIndex("synced", "synced", { unique: false })
+            queueStore.createIndex("timestamp", "timestamp", { unique: false })
+          }
+
+          if (!db.objectStoreNames.contains("metadata")) {
+            db.createObjectStore("metadata", { keyPath: "key" })
+          }
         }
 
-        if (!db.objectStoreNames.contains("metadata")) {
-          db.createObjectStore("metadata", { keyPath: "key" })
-        }
+        // Таймаут для случаев когда IndexedDB висит
+        setTimeout(() => {
+          if (!this.db) {
+            this.isSupported = false
+            reject(new Error("IndexedDB initialization timeout"))
+          }
+        }, 5000)
+      } catch (error) {
+        this.isSupported = false
+        reject(
+          new Error(
+            `IndexedDB initialization failed: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`
+          )
+        )
       }
     })
   }
 
   private async ensureDB(): Promise<IDBDatabase> {
+    if (!this.isSupported) {
+      throw new Error("IndexedDB not supported - using localStorage fallback")
+    }
+
     if (!this.db) {
       await this.init()
     }
-    return this.db!
+
+    if (!this.db) {
+      throw new Error("Failed to initialize IndexedDB")
+    }
+
+    return this.db
+  }
+
+  // ============ FALLBACK METHODS (localStorage) ============
+
+  private getLocalStorageKey(table: string): string {
+    return `finance-tracker-${table}`
+  }
+
+  private saveToLocalStorage<T>(table: string, data: T[]): void {
+    try {
+      localStorage.setItem(this.getLocalStorageKey(table), JSON.stringify(data))
+    } catch (error) {
+      throw new Error(
+        `Failed to save to localStorage: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      )
+    }
+  }
+
+  private getFromLocalStorage<T>(table: string): T[] {
+    try {
+      const data = localStorage.getItem(this.getLocalStorageKey(table))
+      return data ? JSON.parse(data) : []
+    } catch {
+      return []
+    }
   }
 
   // ============ CATEGORIES ============
 
   async saveCategories(categories: Category[]): Promise<void> {
-    const db = await this.ensureDB()
-    const transaction = db.transaction(["categories"], "readwrite")
-    const store = transaction.objectStore("categories")
-
-    for (const category of categories) {
-      store.put(category)
+    // Fallback to localStorage if IndexedDB not supported
+    if (!this.isSupported) {
+      this.saveToLocalStorage("categories", categories)
+      return
     }
 
-    return new Promise((resolve, reject) => {
-      transaction.oncomplete = (): void => resolve()
-      transaction.onerror = (): void => reject(transaction.error)
-    })
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["categories"], "readwrite")
+      const store = transaction.objectStore("categories")
+
+      for (const category of categories) {
+        store.put(category)
+      }
+
+      return new Promise((resolve, reject) => {
+        transaction.oncomplete = (): void => resolve()
+        transaction.onerror = (): void => reject(transaction.error)
+      })
+    } catch {
+      // Fallback to localStorage if IndexedDB fails
+      this.isSupported = false
+      this.saveToLocalStorage("categories", categories)
+    }
   }
 
   async getCategories(): Promise<Category[]> {
-    const db = await this.ensureDB()
-    const transaction = db.transaction(["categories"], "readonly")
-    const store = transaction.objectStore("categories")
-    const request = store.getAll()
+    // Fallback to localStorage if IndexedDB not supported
+    if (!this.isSupported) {
+      return this.getFromLocalStorage<Category>("categories")
+    }
 
-    return new Promise((resolve, reject) => {
-      request.onsuccess = (): void => resolve(request.result)
-      request.onerror = (): void => reject(request.error)
-    })
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["categories"], "readonly")
+      const store = transaction.objectStore("categories")
+      const request = store.getAll()
+
+      return new Promise((resolve, reject) => {
+        request.onsuccess = (): void => resolve(request.result)
+        request.onerror = (): void => reject(request.error)
+      })
+    } catch {
+      // Fallback to localStorage if IndexedDB fails
+      this.isSupported = false
+      return this.getFromLocalStorage<Category>("categories")
+    }
   }
 
   async saveCategory(category: Category): Promise<void> {
@@ -119,30 +239,53 @@ class IndexedDBManager {
   // ============ TRANSACTIONS ============
 
   async saveTransactions(transactions: Transaction[]): Promise<void> {
-    const db = await this.ensureDB()
-    const transaction = db.transaction(["transactions"], "readwrite")
-    const store = transaction.objectStore("transactions")
-
-    for (const trans of transactions) {
-      store.put(trans)
+    // Fallback to localStorage if IndexedDB not supported
+    if (!this.isSupported) {
+      this.saveToLocalStorage("transactions", transactions)
+      return
     }
 
-    return new Promise((resolve, reject) => {
-      transaction.oncomplete = (): void => resolve()
-      transaction.onerror = (): void => reject(transaction.error)
-    })
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["transactions"], "readwrite")
+      const store = transaction.objectStore("transactions")
+
+      for (const trans of transactions) {
+        store.put(trans)
+      }
+
+      return new Promise((resolve, reject) => {
+        transaction.oncomplete = (): void => resolve()
+        transaction.onerror = (): void => reject(transaction.error)
+      })
+    } catch {
+      // Fallback to localStorage if IndexedDB fails
+      this.isSupported = false
+      this.saveToLocalStorage("transactions", transactions)
+    }
   }
 
   async getTransactions(): Promise<Transaction[]> {
-    const db = await this.ensureDB()
-    const transaction = db.transaction(["transactions"], "readonly")
-    const store = transaction.objectStore("transactions")
-    const request = store.getAll()
+    // Fallback to localStorage if IndexedDB not supported
+    if (!this.isSupported) {
+      return this.getFromLocalStorage<Transaction>("transactions")
+    }
 
-    return new Promise((resolve, reject) => {
-      request.onsuccess = (): void => resolve(request.result)
-      request.onerror = (): void => reject(request.error)
-    })
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["transactions"], "readonly")
+      const store = transaction.objectStore("transactions")
+      const request = store.getAll()
+
+      return new Promise((resolve, reject) => {
+        request.onsuccess = (): void => resolve(request.result)
+        request.onerror = (): void => reject(request.error)
+      })
+    } catch {
+      // Fallback to localStorage if IndexedDB fails
+      this.isSupported = false
+      return this.getFromLocalStorage<Transaction>("transactions")
+    }
   }
 
   async getTransaction(id: string): Promise<Transaction | null> {
@@ -158,15 +301,45 @@ class IndexedDBManager {
   }
 
   async saveTransaction(transaction: Transaction): Promise<void> {
-    const db = await this.ensureDB()
-    const dbTransaction = db.transaction(["transactions"], "readwrite")
-    const store = dbTransaction.objectStore("transactions")
-    store.put(transaction)
+    // Fallback to localStorage if IndexedDB not supported
+    if (!this.isSupported) {
+      const transactions = this.getFromLocalStorage<Transaction>("transactions")
+      const existingIndex = transactions.findIndex((t) => t.id === transaction.id)
 
-    return new Promise((resolve, reject) => {
-      dbTransaction.oncomplete = (): void => resolve()
-      dbTransaction.onerror = (): void => reject(dbTransaction.error)
-    })
+      if (existingIndex >= 0) {
+        transactions[existingIndex] = transaction
+      } else {
+        transactions.push(transaction)
+      }
+
+      this.saveToLocalStorage("transactions", transactions)
+      return
+    }
+
+    try {
+      const db = await this.ensureDB()
+      const dbTransaction = db.transaction(["transactions"], "readwrite")
+      const store = dbTransaction.objectStore("transactions")
+      store.put(transaction)
+
+      return new Promise((resolve, reject) => {
+        dbTransaction.oncomplete = (): void => resolve()
+        dbTransaction.onerror = (): void => reject(dbTransaction.error)
+      })
+    } catch {
+      // Fallback to localStorage if IndexedDB fails
+      this.isSupported = false
+      const transactions = this.getFromLocalStorage<Transaction>("transactions")
+      const existingIndex = transactions.findIndex((t) => t.id === transaction.id)
+
+      if (existingIndex >= 0) {
+        transactions[existingIndex] = transaction
+      } else {
+        transactions.push(transaction)
+      }
+
+      this.saveToLocalStorage("transactions", transactions)
+    }
   }
 
   async deleteTransaction(id: string): Promise<void> {

@@ -65,11 +65,12 @@ export const useOfflineSync = (): UseOfflineSyncReturn => {
           lastSyncTime: lastSync,
           pendingOperations: queue.length
         }))
-      } catch (_error) {
-        // Failed to initialize IndexedDB
+      } catch (error) {
+        // Failed to initialize IndexedDB - provide detailed error for PWA debugging
+        const errorMessage = error instanceof Error ? error.message : "Unknown error"
         setSyncStatus((prev) => ({
           ...prev,
-          error: "Ошибка инициализации офлайн хранилища"
+          error: `Офлайн хранилище недоступно: ${errorMessage}. Будет использован временный режим.`
         }))
       }
     }
