@@ -180,13 +180,17 @@ class IndexedDBManager {
 
   private saveToLocalStorage<T>(table: string, data: T[]): void {
     console.log("🟡 saveToLocalStorage called:", { table, count: data.length })
+    alert(`🟡 SAVING TO LOCALSTORAGE: ${table}, count: ${data.length}`)
+
     try {
       const key = this.getLocalStorageKey(table)
       const serialized = JSON.stringify(data)
       localStorage.setItem(key, serialized)
       console.log("🟢 saveToLocalStorage success:", { key, dataLength: serialized.length })
+      alert(`🟢 SAVED TO LOCALSTORAGE: ${key}, size: ${serialized.length}`)
     } catch (error) {
       console.error("🔴 saveToLocalStorage error:", error)
+      alert(`🔴 LOCALSTORAGE ERROR: ${error}`)
       throw new Error(
         `Failed to save to localStorage: ${
           error instanceof Error ? error.message : "Unknown error"

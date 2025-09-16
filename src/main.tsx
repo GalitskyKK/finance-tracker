@@ -6,6 +6,11 @@ import "./index.css"
 import { registerSW } from "virtual:pwa-register"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
+// КРИТИЧНО: Проверяем что JavaScript вообще загружается
+console.log("🚀 main.tsx loaded!")
+console.log("🚀 React version:", React.version)
+alert("🚀 JS LOADED! Check console for logs")
+
 // Типы для debugStorage
 declare global {
   interface Window {
@@ -110,10 +115,26 @@ const updateSW = registerSW({
   }
 })
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </React.StrictMode>
-)
+console.log("🚀 Starting React app...")
+
+try {
+  const rootElement = document.getElementById("root")
+  console.log("🚀 Root element found:", !!rootElement)
+
+  const root = ReactDOM.createRoot(rootElement!)
+  console.log("🚀 React root created")
+
+  root.render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </React.StrictMode>
+  )
+
+  console.log("🚀 React app rendered!")
+  alert("🚀 REACT STARTED! App should be visible")
+} catch (error) {
+  console.error("🔴 CRITICAL: React app failed to start:", error)
+  alert("🔴 REACT FAILED: " + error)
+}
