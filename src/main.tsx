@@ -9,7 +9,9 @@ import { registerSW } from "virtual:pwa-register"
 // Типы для debugStorage
 declare global {
   interface Window {
-    debugStorage: () => string
+    debugStorage: () => any
+    testTransactionSave: () => string
+    clearStorage: () => string
   }
 }
 
@@ -19,18 +21,57 @@ if (typeof window !== "undefined") {
     try {
       const transactions = localStorage.getItem("finance-tracker-transactions")
       const categories = localStorage.getItem("finance-tracker-categories")
-      console.log("🔍 SIMPLE DEBUG:", {
+
+      const result = {
         transactions: !!transactions,
         categories: !!categories,
         transactionsLength: transactions?.length || 0,
         categoriesLength: categories?.length || 0,
         localStorage: typeof localStorage,
-        window: typeof window
-      })
-      return "✅ debugStorage работает"
+        window: typeof window,
+        transactionsData: transactions ? transactions.substring(0, 100) + "..." : null,
+        categoriesData: categories ? categories.substring(0, 100) + "..." : null
+      }
+
+      console.log("🔍 SIMPLE DEBUG:", result)
+      return result
     } catch (error) {
       console.error("❌ debugStorage error:", error)
       return "❌ ошибка debugStorage"
+    }
+  }
+
+  // Дополнительные функции
+  window.testTransactionSave = () => {
+    try {
+      const testData = [
+        {
+          id: "test-" + Date.now(),
+          amount: 999,
+          type: "expense",
+          categoryId: "test-cat",
+          description: "Test transaction",
+          date: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ]
+
+      localStorage.setItem("finance-tracker-transactions", JSON.stringify(testData))
+      return "✅ Test transaction saved"
+    } catch (error) {
+      console.error("❌ Test save error:", error)
+      return "❌ Test save failed"
+    }
+  }
+
+  window.clearStorage = () => {
+    try {
+      localStorage.removeItem("finance-tracker-transactions")
+      localStorage.removeItem("finance-tracker-categories")
+      return "✅ Storage cleared"
+    } catch (error) {
+      return "❌ Clear failed"
     }
   }
 }
