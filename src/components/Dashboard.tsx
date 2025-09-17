@@ -1,7 +1,9 @@
 import React, { useMemo } from "react"
-import { TrendingUp, TrendingDown, Wallet, Target, Calendar, Home, Award } from "lucide-react"
+import { TrendingUp, TrendingDown, Target, Calendar, Home, Award, PiggyBank } from "lucide-react"
 import { useTransactionFilterStore } from "@/store/transactionFilterStore"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
+import { useSavingsStoreSupabase } from "@/store/savingsStoreSupabase"
+import type { BalanceWithSavings } from "@/types"
 import { formatCurrency } from "@/utils/formatters"
 import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
 import { ru } from "date-fns/locale"
@@ -14,6 +16,7 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChange }) => {
   const { transactions } = useTransactionStoreSupabase()
+  const savingsStore = useSavingsStoreSupabase()
   const { setFilter } = useTransactionFilterStore()
 
   // Вычисляем статистику
@@ -32,6 +35,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChan
       .reduce((sum, t) => sum + t.amount, 0)
 
     const totalBalance = totalIncome - totalExpenses
+
+    // Данные о сбережениях
+    const balanceData: BalanceWithSavings = savingsStore.getBalanceWithSavings(totalBalance)
+    const activeSavingsGoals = savingsStore.savingsGoals.filter((goal) => goal.isActive)
 
     // Транзакции за текущий месяц
     const currentMonthTransactions = transactions.filter((transaction) => {
@@ -61,9 +68,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChan
       monthlyIncome,
       monthlyExpenses,
       totalTransactions,
-      monthlyTransactions
+      monthlyTransactions,
+      balanceData,
+      activeSavingsGoals
     }
-  }, [transactions])
+  }, [transactions, savingsStore])
 
   const ModernStatCard: React.FC<{
     title: string
@@ -138,22 +147,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChan
         collapsibleDescription={true}
       />
 
+      {/* Обзор баланса с сбережениями */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200 mb-8">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Обзор баланса</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-white rounded-xl">
+            <p className="text-sm text-gray-600 mb-1">Общий баланс</p>
+            <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalBalance)}</p>
+            <p className="text-xs text-gray-500">
+              {stats.totalBalance >= 0 ? "Все хорошо!" : "Нужно подтянуть"}
+            </p>
+          </div>
+          <div className="text-center p-4 bg-white rounded-xl">
+            <p className="text-sm text-emerald-600 mb-1">Свободные средства</p>
+            <p className="text-2xl font-bold text-emerald-600">
+              {formatCurrency(stats.balanceData.availableBalance)}
+            </p>
+            <p className="text-xs text-gray-500">Доступно для трат</p>
+          </div>
+          <div className="text-center p-4 bg-white rounded-xl">
+            <p className="text-sm text-blue-600 mb-1">В целях КопиКопи</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {formatCurrency(stats.balanceData.reservedBalance)}
+            </p>
+            <p className="text-xs text-gray-500">{stats.activeSavingsGoals.length} целей</p>
+          </div>
+        </div>
+        {stats.balanceData.availableBalance < 0 && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start space-x-2">
+              <span className="text-red-500 text-lg">⚠️</span>
+              <div className="text-sm text-red-800">
+                <p className="font-medium">Внимание!</p>
+                <p>
+                  У вас отрицательный свободный баланс. Рассмотрите возможность снять деньги с
+                  некоторых целей.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Современные карточки метрик */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <ModernStatCard
-          title="Мой баланс"
-          value={formatCurrency(stats.totalBalance)}
-          subtitle={stats.totalBalance >= 0 ? "Все хорошо!" : "Нужно подтянуть"}
-          icon={<Wallet className="h-5 w-5" />}
-          iconColor={stats.totalBalance >= 0 ? "text-emerald-600" : "text-red-600"}
-          gradient={
-            stats.totalBalance >= 0
-              ? "bg-gradient-to-r from-emerald-500 to-green-500"
-              : "bg-gradient-to-r from-red-500 to-red-600"
-          }
-          description="Общий баланс всех ваших финансов"
-        />
-
         <ModernStatCard
           title="Заработал"
           value={formatCurrency(stats.totalIncome)}
@@ -183,12 +220,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChan
         />
 
         <ModernStatCard
+          title="КопиКопи"
+          value={stats.activeSavingsGoals.length.toString()}
+          subtitle={`${formatCurrency(stats.balanceData.reservedBalance)} накоплено`}
+          icon={<PiggyBank className="h-5 w-5" />}
+          iconColor="text-blue-600"
+          gradient="bg-gradient-to-r from-blue-500 to-indigo-500"
+          description="Ваши сберегательные цели"
+          onClick={() => onPageChange?.("savings")}
+        />
+
+        <ModernStatCard
           title="Операций"
           value={stats.totalTransactions.toString()}
           subtitle={`${stats.monthlyTransactions} в этом месяце`}
           icon={<Target className="h-5 w-5" />}
-          iconColor="text-blue-600"
-          gradient="bg-gradient-to-r from-blue-500 to-indigo-500"
+          iconColor="text-purple-600"
+          gradient="bg-gradient-to-r from-purple-500 to-pink-500"
           description="Количество всех транзакций"
           onClick={() => onPageChange?.("transactions")}
         />

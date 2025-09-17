@@ -1,5 +1,5 @@
-import React from "react"
-import { Cloud, CloudOff, RefreshCw, AlertCircle, CheckCircle, Clock } from "lucide-react"
+import React, { useState, useEffect } from "react"
+import { Cloud, CloudOff, RefreshCw, AlertCircle, CheckCircle, Clock, X } from "lucide-react"
 import { useOfflineSync } from "@/hooks/useOfflineSync"
 import { useNetworkStatus } from "@/hooks/useNetworkStatus"
 import { Button } from "./Button"
@@ -7,6 +7,65 @@ import { Button } from "./Button"
 export const SyncStatus: React.FC = () => {
   const { isOnline } = useNetworkStatus()
   const { syncStatus, isOfflineDataAvailable, syncNow } = useOfflineSync()
+
+  // Состояние видимости для мобильных устройств
+  const [isVisible, setIsVisible] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+  const [manuallyHidden, setManuallyHidden] = useState(false)
+
+  // Определяем мобильное устройство
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024) // lg breakpoint
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  // Автоматическое скрытие на мобильных если все в порядке
+  useEffect(() => {
+    if (!isMobile || manuallyHidden) return // На десктопе всегда показываем, или если вручную скрыто
+
+    const shouldAutoHide =
+      isOnline && !syncStatus.error && !syncStatus.isSyncing && syncStatus.pendingOperations === 0
+
+    if (shouldAutoHide) {
+      // Скрываем через 3 секунды если все в порядке
+      const timer = setTimeout(() => {
+        setIsVisible(false)
+      }, 3000)
+
+      return () => clearTimeout(timer)
+    } else {
+      // Показываем если есть проблемы
+      setIsVisible(true)
+      setManuallyHidden(false) // Сбрасываем ручное скрытие при проблемах
+    }
+  }, [
+    isMobile,
+    manuallyHidden,
+    isOnline,
+    syncStatus.error,
+    syncStatus.isSyncing,
+    syncStatus.pendingOperations
+  ])
+
+  // Сброс видимости при изменении важных состояний
+  useEffect(() => {
+    if (syncStatus.error || syncStatus.isSyncing || syncStatus.pendingOperations > 0) {
+      setIsVisible(true)
+      setManuallyHidden(false)
+    }
+  }, [syncStatus.error, syncStatus.isSyncing, syncStatus.pendingOperations])
+
+  const handleDismiss = (): void => {
+    if (isMobile) {
+      setManuallyHidden(true)
+      setIsVisible(false)
+    }
+  }
 
   const handleSyncClick = (): void => {
     if (isOnline && !syncStatus.isSyncing) {
@@ -31,13 +90,21 @@ export const SyncStatus: React.FC = () => {
     return `${days} дн назад`
   }
 
-  // Не показываем ничего если нет офлайн данных и мы онлайн
-  if (!isOfflineDataAvailable && isOnline && syncStatus.pendingOperations === 0) {
+  // Не показываем ничего если:
+  // 1. Нет офлайн данных и мы онлайн без операций
+  // 2. На мобильных - компонент скрыт автоматически
+  if (
+    (!isOfflineDataAvailable && isOnline && syncStatus.pendingOperations === 0) ||
+    (isMobile && !isVisible)
+  ) {
     return null
   }
 
   return (
-    <div className="fixed bottom-20 left-4 lg:bottom-4 z-40 max-w-sm">
+    <div
+      className={`fixed bottom-20 left-4 lg:bottom-4 z-40 max-w-sm transition-all duration-300 ${
+        isMobile && !isVisible ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
+      }`}>
       <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
         <div className="flex items-center gap-3">
           {/* Иконка статуса */}
@@ -95,17 +162,30 @@ export const SyncStatus: React.FC = () => {
             </div>
           </div>
 
-          {/* Кнопка действия */}
-          {isOnline && syncStatus.pendingOperations > 0 && !syncStatus.isSyncing && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleSyncClick}
-              className="flex items-center gap-1 text-xs">
-              <RefreshCw className="w-3 h-3" />
-              Синхронизировать
-            </Button>
-          )}
+          {/* Кнопки действий */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Кнопка синхронизации */}
+            {isOnline && syncStatus.pendingOperations > 0 && !syncStatus.isSyncing && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSyncClick}
+                className="flex items-center gap-1 text-xs">
+                <RefreshCw className="w-3 h-3" />
+                Синхронизировать
+              </Button>
+            )}
+
+            {/* Кнопка закрытия для мобильных */}
+            {isMobile && (
+              <button
+                onClick={handleDismiss}
+                className="p-1 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+                title="Скрыть">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Прогресс синхронизации */}

@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: "prompt", // Изменили на prompt для принудительного обновления
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
-        name: "KashKontrol - Finance Tracker",
-        short_name: "KashKontrol",
-        description: "Личный трекер финансов для управления доходами и расходами",
+        name: "КопиКопи - Личные Финансы",
+        short_name: "КопиКопи",
+        description: "КопиКопи - ваш помощник в управлении финансами и достижении целей",
         theme_color: "#3b82f6",
         background_color: "#f8fafc",
         display: "standalone",

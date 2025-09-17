@@ -2,6 +2,7 @@ import React from "react"
 import { Wallet } from "lucide-react"
 import { UserMenu } from "@/components/auth/UserMenu"
 import { PWAInstallButton } from "@/components/ui/PWAInstallButton"
+import { CompactSyncStatus } from "@/components/ui/CompactSyncStatus"
 
 interface HeaderProps {
   className?: string
@@ -22,7 +23,7 @@ export const Header: React.FC<HeaderProps> = ({ className = "", onLogoClick }) =
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent group-hover:from-emerald-600 group-hover:to-emerald-500 transition-all duration-200">
-                KashKontrol
+                КопиКопи
               </h1>
               <p className="text-sm text-emerald-600 hidden sm:block font-medium group-hover:text-emerald-500 transition-colors duration-200">
                 Контроль ваших финансов
@@ -38,6 +39,10 @@ export const Header: React.FC<HeaderProps> = ({ className = "", onLogoClick }) =
                 day: "numeric"
               })}
             </div>
+
+            {/* Компактный статус синхронизации для мобильных */}
+            <CompactSyncStatus className="lg:hidden" />
+
             <PWAInstallButton variant="secondary" size="sm" className="hidden sm:flex" />
             <UserMenu />
           </div>

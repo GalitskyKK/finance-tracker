@@ -1,6 +1,6 @@
-# 💰 KashKontrol
+# 💰 КопиКопи
 
-A modern **Personal Finance Tracker** built with React 18 and TypeScript - your complete solution for managing personal finances with **offline-first architecture**.
+A modern **Personal Finance Tracker** built with React 18 and TypeScript - your complete solution for managing personal finances with **savings goals and offline-first architecture**.
 
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2.2-blue.svg)](https://www.typescriptlang.org/)
@@ -146,7 +146,7 @@ src/
 
 ## 🎨 **Design System**
 
-KashKontrol follows a consistent design system:
+КопиКопи follows a consistent design system:
 
 - **🎨 Color Palette** - Modern fintech-inspired colors
 - **📝 Typography** - Clean, readable font hierarchy
@@ -229,19 +229,19 @@ npm run type-check # TypeScript type checking
 
 ## 🚧 **Roadmap**
 
-### **Phase 1: Core Enhancement** 
+### **Phase 1: Core Enhancement**
 
 - [ ] **Background Sync** - Sync even when app is closed
 - [ ] **Push Notifications** - Important financial alerts
 - [ ] **Advanced Filtering** - Complex search queries
 
-### **Phase 2: Financial Features** 
+### **Phase 2: Financial Features**
 
 - [ ] **Budget Management** - Set and track budgets
 - [ ] **Financial Goals** - Savings targets and progress
 - [ ] **Recurring Transactions** - Automatic transaction creation
 
-### **Phase 3: Intelligence** 
+### **Phase 3: Intelligence**
 
 - [ ] **AI Insights** - Smart financial recommendations
 - [ ] **Expense Predictions** - Forecast future spending
@@ -296,12 +296,12 @@ Ready to take control of your finances?
 
 ```bash
 git clone <repository-url>
-cd kashkontrol
+cd kopikopi
 npm install && npm run dev
 ```
 
-**KashKontrol** - Simple. Powerful. Always Available. 💰✨
+**КопиКопи** - Simple. Powerful. Always Available. 💰✨
 
 ---
 
-_Last updated: September 2025 | Version 1.3.0_
+_Last updated: September 2025 | Version 1.4.0 - КопиКопи Feature_

@@ -30,6 +30,7 @@ class IndexedDBManager {
   private db: IDBDatabase | null = null
   private isSupported = true
   private initAttempted = false
+  private autoFixAttempted = false
 
   private checkIndexedDBSupport(): boolean {
     if (typeof window === "undefined") return false
@@ -109,36 +110,43 @@ class IndexedDBManager {
         }
 
         request.onupgradeneeded = (event: IDBVersionChangeEvent): void => {
+          console.log(`🔄 IndexedDB upgrade from version ${event.oldVersion} to ${this.version}`)
           const db = (event.target as IDBOpenDBRequest).result
           const oldVersion = event.oldVersion
 
           // Удаляем старые stores если они существуют (для пересоздания схемы)
           if (oldVersion > 0) {
+            console.log("🗑️ Cleaning old object stores...")
             // Удаляем все старые object stores для чистого обновления
             const storeNames = Array.from(db.objectStoreNames)
             storeNames.forEach((storeName) => {
               if (db.objectStoreNames.contains(storeName)) {
+                console.log(`🗑️ Deleting object store: ${storeName}`)
                 db.deleteObjectStore(storeName)
               }
             })
           }
 
           // Создаем новые stores с правильной схемой
+          console.log("✅ Creating object store: categories")
           const categoryStore = db.createObjectStore("categories", { keyPath: "id" })
           categoryStore.createIndex("type", "type", { unique: false })
           categoryStore.createIndex("name", "name", { unique: false })
 
+          console.log("✅ Creating object store: transactions")
           const transactionStore = db.createObjectStore("transactions", { keyPath: "id" })
           transactionStore.createIndex("categoryId", "categoryId", { unique: false })
           transactionStore.createIndex("type", "type", { unique: false })
           transactionStore.createIndex("date", "date", { unique: false })
 
           // Новые stores для сберегательных целей
+          console.log("✅ Creating object store: savingsGoals")
           const savingsGoalStore = db.createObjectStore("savingsGoals", { keyPath: "id" })
           savingsGoalStore.createIndex("isActive", "isActive", { unique: false })
           savingsGoalStore.createIndex("targetAmount", "targetAmount", { unique: false })
           savingsGoalStore.createIndex("createdAt", "createdAt", { unique: false })
 
+          console.log("✅ Creating object store: savingsTransactions")
           const savingsTransactionStore = db.createObjectStore("savingsTransactions", {
             keyPath: "id"
           })
@@ -563,8 +571,39 @@ class IndexedDBManager {
         transaction.onerror = (): void => reject(transaction.error)
       })
     } catch (error) {
-      console.warn("IndexedDB failed, using localStorage:", error)
-      this.saveToLocalStorage("savingsGoals", goals)
+      // Проверяем, связана ли ошибка с отсутствующим object store
+      const errorMessage = (error as Error)?.message || ""
+      if (errorMessage.includes("object store") || errorMessage.includes("savingsGoals")) {
+        // Пытаемся автоматически исправить IndexedDB
+        const fixed = await this.autoFixIndexedDB()
+        if (fixed) {
+          // Повторяем попытку после исправления
+          try {
+            const db = await this.ensureDB()
+            const transaction = db.transaction(["savingsGoals"], "readwrite")
+            const store = transaction.objectStore("savingsGoals")
+
+            store.clear()
+            goals.forEach((goal) => {
+              store.add(goal)
+            })
+
+            return new Promise((resolve, reject) => {
+              transaction.oncomplete = (): void => resolve()
+              transaction.onerror = (): void => reject(transaction.error)
+            })
+          } catch (retryError) {
+            // Если повторная попытка не удалась, используем localStorage
+            this.saveToLocalStorage("savingsGoals", goals)
+          }
+        } else {
+          // Автоматическое исправление не удалось
+          this.saveToLocalStorage("savingsGoals", goals)
+        }
+      } else {
+        // Обычная ошибка - используем localStorage
+        this.saveToLocalStorage("savingsGoals", goals)
+      }
     }
   }
 
@@ -584,7 +623,31 @@ class IndexedDBManager {
         request.onerror = (): void => reject(request.error)
       })
     } catch (error) {
-      console.warn("IndexedDB failed, using localStorage:", error)
+      // Проверяем, связана ли ошибка с отсутствующим object store
+      const errorMessage = (error as Error)?.message || ""
+      if (errorMessage.includes("object store") || errorMessage.includes("savingsGoals")) {
+        // Пытаемся автоматически исправить IndexedDB
+        const fixed = await this.autoFixIndexedDB()
+        if (fixed) {
+          // Повторяем попытку после исправления
+          try {
+            const db = await this.ensureDB()
+            const transaction = db.transaction(["savingsGoals"], "readonly")
+            const store = transaction.objectStore("savingsGoals")
+            const request = store.getAll()
+
+            return new Promise((resolve, reject) => {
+              request.onsuccess = (): void => resolve(request.result || [])
+              request.onerror = (): void => reject(request.error)
+            })
+          } catch (retryError) {
+            // Если повторная попытка не удалась, используем localStorage
+            return this.getFromLocalStorage<SavingsGoal>("savingsGoals")
+          }
+        }
+      }
+
+      // Обычная ошибка - используем localStorage
       return this.getFromLocalStorage<SavingsGoal>("savingsGoals")
     }
   }
@@ -669,8 +732,39 @@ class IndexedDBManager {
         transaction.onerror = (): void => reject(transaction.error)
       })
     } catch (error) {
-      console.warn("IndexedDB failed, using localStorage:", error)
-      this.saveToLocalStorage("savingsTransactions", transactions)
+      // Проверяем, связана ли ошибка с отсутствующим object store
+      const errorMessage = (error as Error)?.message || ""
+      if (errorMessage.includes("object store") || errorMessage.includes("savingsTransactions")) {
+        // Пытаемся автоматически исправить IndexedDB
+        const fixed = await this.autoFixIndexedDB()
+        if (fixed) {
+          // Повторяем попытку после исправления
+          try {
+            const db = await this.ensureDB()
+            const transaction = db.transaction(["savingsTransactions"], "readwrite")
+            const store = transaction.objectStore("savingsTransactions")
+
+            store.clear()
+            transactions.forEach((savingsTransaction) => {
+              store.add(savingsTransaction)
+            })
+
+            return new Promise((resolve, reject) => {
+              transaction.oncomplete = (): void => resolve()
+              transaction.onerror = (): void => reject(transaction.error)
+            })
+          } catch (retryError) {
+            // Если повторная попытка не удалась, используем localStorage
+            this.saveToLocalStorage("savingsTransactions", transactions)
+          }
+        } else {
+          // Автоматическое исправление не удалось
+          this.saveToLocalStorage("savingsTransactions", transactions)
+        }
+      } else {
+        // Обычная ошибка - используем localStorage
+        this.saveToLocalStorage("savingsTransactions", transactions)
+      }
     }
   }
 
@@ -690,7 +784,31 @@ class IndexedDBManager {
         request.onerror = (): void => reject(request.error)
       })
     } catch (error) {
-      console.warn("IndexedDB failed, using localStorage:", error)
+      // Проверяем, связана ли ошибка с отсутствующим object store
+      const errorMessage = (error as Error)?.message || ""
+      if (errorMessage.includes("object store") || errorMessage.includes("savingsTransactions")) {
+        // Пытаемся автоматически исправить IndexedDB
+        const fixed = await this.autoFixIndexedDB()
+        if (fixed) {
+          // Повторяем попытку после исправления
+          try {
+            const db = await this.ensureDB()
+            const transaction = db.transaction(["savingsTransactions"], "readonly")
+            const store = transaction.objectStore("savingsTransactions")
+            const request = store.getAll()
+
+            return new Promise((resolve, reject) => {
+              request.onsuccess = (): void => resolve(request.result || [])
+              request.onerror = (): void => reject(request.error)
+            })
+          } catch (retryError) {
+            // Если повторная попытка не удалась, используем localStorage
+            return this.getFromLocalStorage<SavingsTransaction>("savingsTransactions")
+          }
+        }
+      }
+
+      // Обычная ошибка - используем localStorage
       return this.getFromLocalStorage<SavingsTransaction>("savingsTransactions")
     }
   }
@@ -750,6 +868,87 @@ class IndexedDBManager {
   }
 
   // ============ UTILITIES ============
+
+  // Автоматическое исправление IndexedDB (для мобильных устройств)
+  private async autoFixIndexedDB(): Promise<boolean> {
+    if (this.autoFixAttempted) {
+      return false // Уже пытались исправить
+    }
+
+    this.autoFixAttempted = true
+
+    try {
+      // Закрываем текущее соединение
+      if (this.db) {
+        this.db.close()
+        this.db = null
+      }
+
+      // Удаляем базу данных с таймаутом
+      await Promise.race([
+        new Promise<void>((resolve, reject) => {
+          const deleteRequest = indexedDB.deleteDatabase(this.dbName)
+          deleteRequest.onsuccess = () => resolve()
+          deleteRequest.onerror = () => reject(deleteRequest.error)
+          deleteRequest.onblocked = () => resolve() // Продолжаем даже если заблокировано
+        }),
+        new Promise<void>((resolve) => setTimeout(resolve, 3000)) // Таймаут 3 секунды
+      ])
+
+      // Сбрасываем флаги
+      this.initAttempted = false
+      this.isSupported = true
+
+      // Инициализируем заново
+      await this.init()
+      return true
+    } catch (error) {
+      // Если автоматическое исправление не удалось, переходим на localStorage
+      this.isSupported = false
+      return false
+    }
+  }
+
+  // Утилита для принудительного пересоздания IndexedDB (для консоли)
+  async forceReinitializeDB(): Promise<void> {
+    console.log("🔄 Force reinitializing IndexedDB...")
+
+    // Закрываем текущее соединение
+    if (this.db) {
+      this.db.close()
+      this.db = null
+    }
+
+    // Удаляем базу данных полностью
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const deleteRequest = indexedDB.deleteDatabase(this.dbName)
+        deleteRequest.onsuccess = () => {
+          console.log("✅ IndexedDB deleted successfully")
+          resolve()
+        }
+        deleteRequest.onerror = () => {
+          console.error("❌ Failed to delete IndexedDB")
+          reject(deleteRequest.error)
+        }
+        deleteRequest.onblocked = () => {
+          console.warn("⚠️ IndexedDB deletion blocked - close all tabs and try again")
+          reject(new Error("Database deletion blocked"))
+        }
+      })
+    } catch (error) {
+      console.error("❌ Error deleting IndexedDB:", error)
+      throw error
+    }
+
+    // Сбрасываем флаги
+    this.initAttempted = false
+    this.autoFixAttempted = false
+    this.isSupported = true
+
+    // Инициализируем заново
+    await this.init()
+  }
 
   async clearAllData(): Promise<void> {
     if (!this.isSupported) {

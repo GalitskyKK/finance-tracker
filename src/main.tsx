@@ -7,7 +7,7 @@ import { registerSW } from "virtual:pwa-register"
 import type { Transaction, Category } from "./types"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-console.log("🚀 KashKontrol v1.3.0 starting...")
+console.log("🚀 КопиКопи v1.4.0 starting...")
 console.log("⚡ Built with React", React.version)
 
 // Типы для debugStorage
@@ -17,6 +17,7 @@ declare global {
     testTransactionSave: () => string
     clearStorage: () => string
     clearAllCaches: () => Promise<string>
+    fixIndexedDB: () => Promise<string>
     testStore: () => string
   }
 }
@@ -219,6 +220,51 @@ if (typeof window !== "undefined") {
     } catch (error) {
       alert(`❌ Ошибка очистки кэшей: ${error}`)
       return `❌ ошибка: ${error}`
+    }
+  }
+
+  // Утилита для исправления IndexedDB проблем (КопиКопи)
+  window.fixIndexedDB = async (): Promise<string> => {
+    try {
+      console.log("🔧 Fixing IndexedDB problems...")
+
+      // Закрываем и удаляем IndexedDB
+      if ("indexedDB" in window) {
+        await new Promise<void>((resolve, reject) => {
+          const deleteRequest = indexedDB.deleteDatabase("finance-tracker-db")
+          deleteRequest.onsuccess = () => {
+            console.log("✅ IndexedDB deleted successfully")
+            resolve()
+          }
+          deleteRequest.onerror = () => {
+            console.error("❌ Failed to delete IndexedDB")
+            reject(deleteRequest.error)
+          }
+          deleteRequest.onblocked = () => {
+            console.warn("⚠️ IndexedDB deletion blocked")
+            alert("⚠️ Закройте все остальные вкладки с КопиКопи и попробуйте снова")
+            resolve() // Продолжаем
+          }
+
+          // Таймаут на случай зависания
+          setTimeout(() => {
+            console.log("⏰ IndexedDB deletion timeout")
+            resolve()
+          }, 5000)
+        })
+      }
+
+      // Очищаем localStorage данные КопиКопи
+      localStorage.removeItem("finance-tracker-savingsGoals")
+      localStorage.removeItem("finance-tracker-savingsTransactions")
+      console.log("✅ КопиКопи localStorage data cleared")
+
+      alert("✅ IndexedDB исправлен! Обновите страницу.")
+      return "✅ IndexedDB fixed! Reload page."
+    } catch (error) {
+      console.error("❌ Error fixing IndexedDB:", error)
+      alert(`❌ Ошибка: ${error}`)
+      return `❌ Error: ${error}`
     }
   }
 

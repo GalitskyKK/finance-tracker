@@ -2,6 +2,7 @@ import { useState, useEffect, Suspense, useCallback } from "react"
 import React from "react"
 import { Layout } from "@/components/layout/Layout"
 import { DataMigrationModal } from "@/components/migration/DataMigrationModal"
+import { AutoFixIndexedDB } from "@/components/AutoFixIndexedDB"
 
 // Lazy load страниц для code splitting
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"))
@@ -227,6 +228,9 @@ export const AppWithMigration: React.FC = () => {
 
   return (
     <>
+      {/* Автоматическое исправление IndexedDB для мобильных устройств */}
+      <AutoFixIndexedDB />
+
       <Layout currentPage={currentPage} onPageChange={setCurrentPage}>
         {renderPage()}
       </Layout>

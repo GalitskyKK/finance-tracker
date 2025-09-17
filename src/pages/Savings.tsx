@@ -1,8 +1,15 @@
-import React, { useState, useEffect } from "react"
-import type { SavingsGoal, CreateSavingsGoalData, UpdateSavingsGoalData } from "@/types"
+import React, { useState, useEffect, useMemo } from "react"
+import type {
+  SavingsGoal,
+  CreateSavingsGoalData,
+  UpdateSavingsGoalData,
+  CreateSavingsTransactionData
+} from "@/types"
 import { useSavingsStoreSupabase } from "@/store/savingsStoreSupabase"
+import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { SavingsGoalCard } from "@/components/ui/SavingsGoalCard"
 import { SavingsGoalForm } from "@/components/forms/SavingsGoalForm"
+import { SavingsTransactionModal } from "@/components/forms/SavingsTransactionModal"
 import { PageHeader } from "@/components/ui/PageHeader"
 import { Button } from "@/components/ui/Button"
 import { formatCurrency } from "@/utils/formatters"
@@ -17,12 +24,22 @@ const Savings: React.FC = () => {
     updateSavingsGoal,
     deleteSavingsGoal,
     getTotalSavingsAmount,
+    addSavingsTransaction,
+    getBalanceWithSavings,
     clearError
   } = useSavingsStoreSupabase()
+
+  const { transactions } = useTransactionStoreSupabase()
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null)
   const [formLoading, setFormLoading] = useState(false)
+
+  // States for transaction modals
+  const [transactionModalOpen, setTransactionModalOpen] = useState(false)
+  const [transactionType, setTransactionType] = useState<"deposit" | "withdraw">("deposit")
+  const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null)
+  const [transactionLoading, setTransactionLoading] = useState(false)
 
   // Загружаем данные при монтировании
   useEffect(() => {
@@ -35,6 +52,21 @@ const Savings: React.FC = () => {
       clearError()
     }
   }, [clearError])
+
+  // Вычисляем баланс с учетом сбережений
+  const balanceData = useMemo(() => {
+    const totalIncome = transactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0)
+
+    const totalExpenses = transactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + t.amount, 0)
+
+    const totalBalance = totalIncome - totalExpenses
+
+    return getBalanceWithSavings(totalBalance)
+  }, [transactions, getBalanceWithSavings])
 
   const totalSavingsAmount = getTotalSavingsAmount()
   const activeGoals = savingsGoals.filter((goal) => goal.isActive)
@@ -86,14 +118,42 @@ const Savings: React.FC = () => {
     }
   }
 
+  const handleSavingsTransaction = async (data: CreateSavingsTransactionData): Promise<void> => {
+    setTransactionLoading(true)
+    try {
+      await addSavingsTransaction(data)
+      setTransactionModalOpen(false)
+      setSelectedGoal(null)
+    } catch (error) {
+      console.error("Failed to process savings transaction:", error)
+      throw error
+    } finally {
+      setTransactionLoading(false)
+    }
+  }
+
   const handleDeposit = (goalId: string): void => {
-    // TODO: Открыть модал для пополнения цели
-    console.log("Deposit to goal:", goalId)
+    const goal = savingsGoals.find((g) => g.id === goalId)
+    if (goal) {
+      setSelectedGoal(goal)
+      setTransactionType("deposit")
+      setTransactionModalOpen(true)
+    }
   }
 
   const handleWithdraw = (goalId: string): void => {
-    // TODO: Открыть модал для снятия с цели
-    console.log("Withdraw from goal:", goalId)
+    const goal = savingsGoals.find((g) => g.id === goalId)
+    if (goal) {
+      setSelectedGoal(goal)
+      setTransactionType("withdraw")
+      setTransactionModalOpen(true)
+    }
+  }
+
+  const handleCloseTransactionModal = (): void => {
+    setTransactionModalOpen(false)
+    setSelectedGoal(null)
+    setTransactionType("deposit")
   }
 
   const handleEdit = (goalId: string): void => {
@@ -122,18 +182,47 @@ const Savings: React.FC = () => {
       {/* Header */}
       <PageHeader title="КопиКопи" subtitle="Ваши сберегательные цели" />
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium opacity-90">Всего накоплено</h3>
-              <p className="text-3xl font-bold">{formatCurrency(totalSavingsAmount)}</p>
-            </div>
-            <div className="text-4xl opacity-80">💰</div>
+      {/* Balance overview */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Обзор баланса</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-1">Общий баланс</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {formatCurrency(balanceData.totalBalance)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-emerald-600 mb-1">Свободные средства</p>
+            <p className="text-2xl font-bold text-emerald-600">
+              {formatCurrency(balanceData.availableBalance)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-blue-600 mb-1">В целях КопиКопи</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {formatCurrency(balanceData.reservedBalance)}
+            </p>
           </div>
         </div>
+        {balanceData.availableBalance < 0 && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start space-x-2">
+              <span className="text-red-500 text-lg">⚠️</span>
+              <div className="text-sm text-red-800">
+                <p className="font-medium">Внимание!</p>
+                <p>
+                  У вас отрицательный свободный баланс. Рассмотрите возможность снять деньги с
+                  некоторых целей.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
+      {/* Summary cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -151,6 +240,16 @@ const Savings: React.FC = () => {
               <p className="text-3xl font-bold">{completedGoals.length}</p>
             </div>
             <div className="text-4xl opacity-80">🏆</div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium opacity-90">Всего накоплено</h3>
+              <p className="text-3xl font-bold">{formatCurrency(totalSavingsAmount)}</p>
+            </div>
+            <div className="text-4xl opacity-80">💰</div>
           </div>
         </div>
       </div>
@@ -244,6 +343,17 @@ const Savings: React.FC = () => {
         onSubmit={handleUpdateGoal}
         goal={editingGoal || undefined}
         loading={formLoading}
+      />
+
+      {/* Savings transaction modal */}
+      <SavingsTransactionModal
+        isOpen={transactionModalOpen}
+        onClose={handleCloseTransactionModal}
+        onSubmit={handleSavingsTransaction}
+        goal={selectedGoal}
+        type={transactionType}
+        loading={transactionLoading}
+        availableBalance={balanceData.availableBalance}
       />
     </div>
   )
