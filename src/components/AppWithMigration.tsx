@@ -40,6 +40,16 @@ export const AppWithMigration: React.FC = () => {
 
         console.log(`🔄 Initializing data in ${isOnline ? "ONLINE" : "OFFLINE"} mode`)
 
+        // КРИТИЧНО: Сначала инициализируем IndexedDB!
+        try {
+          const { indexedDBManager } = await import("@/utils/indexedDB")
+          console.log("🔄 Pre-initializing IndexedDB...")
+          await indexedDBManager.init()
+          console.log("✅ IndexedDB pre-initialized successfully!")
+        } catch (error) {
+          console.log("⚠️ IndexedDB pre-init failed, will use fallback:", error)
+        }
+
         // Получаем свежие функции из store
         const { fetchTransactions: freshFetchTransactions, loadFromCache: freshLoadFromCache } =
           useTransactionStoreSupabase.getState()
