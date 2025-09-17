@@ -6,9 +6,10 @@ import "./index.css"
 import { registerSW } from "virtual:pwa-register"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-console.log("🚨 FINANCE TRACKER v1.2.5 LOADING!")
+console.log("🚨🚨🚨 FINANCE TRACKER v1.2.6-20250917 LOADING! 🚨🚨🚨")
 console.log("🚨 React version:", React.version)
-// alert убран для чистоты логов
+console.log("🚨 TIMESTAMP BUILD:", new Date().toISOString())
+alert("🚨 НОВАЯ ВЕРСИЯ v1.2.6-20250917 ЗАГРУЗИЛАСЬ! Если видите это - версия обновилась!")
 
 // Типы для debugStorage
 declare global {
@@ -16,6 +17,7 @@ declare global {
     debugStorage: () => any
     testTransactionSave: () => string
     clearStorage: () => string
+    clearAllCaches: () => Promise<string>
     testStore: () => string
   }
 }
@@ -151,6 +153,33 @@ if (typeof window !== "undefined") {
     }
   }
 
+  // Принудительная очистка всех кэшей PWA
+  window.clearAllCaches = async () => {
+    try {
+      // Очищаем localStorage
+      localStorage.clear()
+      console.log("✅ localStorage cleared")
+
+      // Очищаем все кэши PWA
+      const cacheNames = await caches.keys()
+      await Promise.all(cacheNames.map((name) => caches.delete(name)))
+      console.log("✅ PWA caches cleared:", cacheNames)
+
+      // Отключаем Service Worker
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        await Promise.all(registrations.map((reg) => reg.unregister()))
+        console.log("✅ Service Workers unregistered")
+      }
+
+      alert("🧹 ВСЕ КЭШИ ОЧИЩЕНЫ! Обновите страницу.")
+      return "✅ Все кэши очищены"
+    } catch (error) {
+      alert(`❌ Ошибка очистки кэшей: ${error}`)
+      return `❌ ошибка: ${error}`
+    }
+  }
+
   // Функция для тестирования store напрямую
   window.testStore = () => {
     try {
@@ -173,14 +202,28 @@ const queryClient = new QueryClient({
   }
 })
 
-// Регистрация Service Worker для PWA
+// АГРЕССИВНОЕ ОБНОВЛЕНИЕ Service Worker для PWA
 const updateSW = registerSW({
+  immediate: true, // Немедленная регистрация
   onNeedRefresh() {
-    if (confirm("Доступно обновление приложения. Перезагрузить?")) {
-      updateSW(true)
+    console.log("🔄 SW UPDATE AVAILABLE - FORCE RELOADING!")
+    alert("🔄 ОБНОВЛЕНИЕ ДОСТУПНО! Принудительно перезагружаем...")
+    // ПРИНУДИТЕЛЬНО перезагружаем страницу при обновлении
+    updateSW(true)
+    window.location.reload()
+  },
+  onRegistered(registration) {
+    console.log("📱 SW REGISTERED:", registration?.scope)
+    // Принудительно проверяем обновления каждые 10 секунд
+    if (registration) {
+      setInterval(() => {
+        console.log("🔍 Checking for SW updates...")
+        registration.update()
+      }, 10000)
     }
   },
   onOfflineReady() {
+    console.log("📴 SW OFFLINE READY")
     // Приложение готово к работе офлайн
   }
 })

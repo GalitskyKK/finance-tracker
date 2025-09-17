@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt", // Изменили на prompt для принудительного обновления
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
         name: "KashKontrol - Finance Tracker",
@@ -89,6 +89,8 @@ export default defineConfig({
         ]
       },
       workbox: {
+        skipWaiting: true, // Принудительное обновление
+        clientsClaim: true, // Немедленное управление страницами
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
@@ -165,7 +167,7 @@ export default defineConfig({
     minify: "terser",
     terserOptions: {
       compress: {
-        drop_console: true,
+        drop_console: false, // ВКЛЮЧАЕМ console.log для диагностики!
         drop_debugger: true
       }
     }
