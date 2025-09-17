@@ -47,21 +47,55 @@ export const AppWithMigration: React.FC = () => {
           useCategoryStoreSupabase.getState()
 
         if (isOnline) {
-          // Онлайн: загружаем данные с сервера (fetchTransactions сначала загрузит кэш, потом сервер)
-          await Promise.all([freshFetchCategories(), freshFetchTransactions()])
-          console.log("✅ Online data loaded")
-        } else {
-          // Офлайн: загружаем только из кэша
-          try {
-            await Promise.all([loadCategoriesFromCache(), freshLoadFromCache()])
-            console.log("✅ Offline data loaded from cache")
-          } catch (error) {
-            console.error("❌ Offline loading failed:", error)
-            // Failed to load from cache in offline mode - try individual loads
+          // Онлайн: загружаем данные с сервера с retry для IndexedDB
+          let retryCount = 0
+          const maxRetries = 3
+
+          while (retryCount < maxRetries) {
             try {
-              await freshLoadFromCache()
-            } catch (error2) {
-              // Failed to load transactions from cache
+              console.log(
+                `🔄 Attempting to load online data (attempt ${retryCount + 1}/${maxRetries})`
+              )
+              await Promise.all([freshFetchCategories(), freshFetchTransactions()])
+              console.log("✅ Online data loaded")
+              break // Успешно загрузили
+            } catch (error) {
+              retryCount++
+              console.error(`❌ Online loading attempt ${retryCount} failed:`, error)
+
+              if (retryCount < maxRetries) {
+                // Ждем перед повторной попыткой - дать IndexedDB время инициализироваться
+                console.log(`⏳ Waiting 1s before retry ${retryCount + 1}...`)
+                await new Promise((resolve) => setTimeout(resolve, 1000))
+              } else {
+                console.log("❌ All online loading attempts failed")
+                // Failed to load after all retries
+              }
+            }
+          }
+        } else {
+          // Офлайн: загружаем только из кэша с retry для IndexedDB
+          let retryCount = 0
+          const maxRetries = 3
+
+          while (retryCount < maxRetries) {
+            try {
+              console.log(`🔄 Attempting to load cache (attempt ${retryCount + 1}/${maxRetries})`)
+              await Promise.all([loadCategoriesFromCache(), freshLoadFromCache()])
+              console.log("✅ Offline data loaded from cache")
+              break // Успешно загрузили
+            } catch (error) {
+              retryCount++
+              console.error(`❌ Offline loading attempt ${retryCount} failed:`, error)
+
+              if (retryCount < maxRetries) {
+                // Ждем перед повторной попыткой - дать IndexedDB время инициализироваться
+                console.log(`⏳ Waiting 1s before retry ${retryCount + 1}...`)
+                await new Promise((resolve) => setTimeout(resolve, 1000))
+              } else {
+                console.log("❌ All cache loading attempts failed")
+                // Failed to load from cache after all retries
+              }
             }
           }
         }

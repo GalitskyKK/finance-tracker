@@ -64,8 +64,10 @@ class IndexedDBManager {
     }
 
     this.initAttempted = true
+    console.log("🔄 IndexedDB init starting...")
 
     if (!this.checkIndexedDBSupport()) {
+      console.log("❌ IndexedDB not supported")
       this.isSupported = false
       // Не выбрасываем ошибку, просто используем fallback
       return Promise.resolve()
@@ -101,6 +103,7 @@ class IndexedDBManager {
         request.onsuccess = (): void => {
           this.db = request.result
           this.isSupported = true
+          console.log("✅ IndexedDB initialized successfully")
           resolve()
         }
 

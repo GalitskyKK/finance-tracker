@@ -6,10 +6,10 @@ import "./index.css"
 import { registerSW } from "virtual:pwa-register"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-console.log("🚨🚨🚨 FINANCE TRACKER v1.2.6-20250917 LOADING! 🚨🚨🚨")
+console.log("🚨🚨🚨 FINANCE TRACKER v1.2.7-retry-fix LOADING! 🚨🚨🚨")
 console.log("🚨 React version:", React.version)
 console.log("🚨 TIMESTAMP BUILD:", new Date().toISOString())
-alert("🚨 НОВАЯ ВЕРСИЯ v1.2.6-20250917 ЗАГРУЗИЛАСЬ! Если видите это - версия обновилась!")
+alert("🚨 НОВАЯ ВЕРСИЯ v1.2.7-retry-fix ЗАГРУЗИЛАСЬ! IndexedDB retry fix!")
 
 // Типы для debugStorage
 declare global {
@@ -36,59 +36,76 @@ if (typeof window !== "undefined") {
       let indexedDBCategories = 0
       let indexedDBSupported = false
 
-      try {
-        const indexedDB = window.indexedDB
-        if (indexedDB) {
-          indexedDBSupported = true
+      // Retry механизм для IndexedDB (как в приложении)
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`🔄 debugStorage: IndexedDB attempt ${attempt}/3`)
+          const indexedDB = window.indexedDB
+          if (indexedDB) {
+            indexedDBSupported = true
 
-          // Пытаемся открыть нашу БД
-          const dbRequest = indexedDB.open("FinanceTrackerDB", 2)
+            // Пытаемся открыть нашу БД (правильное имя!)
+            const dbRequest = indexedDB.open("finance-tracker-db", 2)
 
-          await new Promise((resolve) => {
-            dbRequest.onsuccess = async () => {
-              try {
-                const db = dbRequest.result
+            await new Promise((resolve) => {
+              dbRequest.onsuccess = async () => {
+                try {
+                  const db = dbRequest.result
 
-                if (db.objectStoreNames.contains("transactions")) {
-                  const transactionStore = db
-                    .transaction(["transactions"], "readonly")
-                    .objectStore("transactions")
-                  const transactionRequest = transactionStore.getAll()
+                  if (db.objectStoreNames.contains("transactions")) {
+                    const transactionStore = db
+                      .transaction(["transactions"], "readonly")
+                      .objectStore("transactions")
+                    const transactionRequest = transactionStore.getAll()
 
-                  transactionRequest.onsuccess = () => {
-                    indexedDBTransactions = transactionRequest.result.length
+                    transactionRequest.onsuccess = () => {
+                      indexedDBTransactions = transactionRequest.result.length
 
-                    if (db.objectStoreNames.contains("categories")) {
-                      const categoryStore = db
-                        .transaction(["categories"], "readonly")
-                        .objectStore("categories")
-                      const categoryRequest = categoryStore.getAll()
+                      if (db.objectStoreNames.contains("categories")) {
+                        const categoryStore = db
+                          .transaction(["categories"], "readonly")
+                          .objectStore("categories")
+                        const categoryRequest = categoryStore.getAll()
 
-                      categoryRequest.onsuccess = () => {
-                        indexedDBCategories = categoryRequest.result.length
+                        categoryRequest.onsuccess = () => {
+                          indexedDBCategories = categoryRequest.result.length
+                          resolve(true)
+                        }
+                        categoryRequest.onerror = () => resolve(true)
+                      } else {
                         resolve(true)
                       }
-                      categoryRequest.onerror = () => resolve(true)
-                    } else {
-                      resolve(true)
                     }
+                    transactionRequest.onerror = () => resolve(true)
+                  } else {
+                    resolve(true)
                   }
-                  transactionRequest.onerror = () => resolve(true)
-                } else {
+
+                  db.close()
+                } catch (error) {
                   resolve(true)
                 }
-
-                db.close()
-              } catch (error) {
-                resolve(true)
               }
-            }
-            dbRequest.onerror = () => resolve(true)
-            dbRequest.onblocked = () => resolve(true)
-          })
+              dbRequest.onerror = () => resolve(true)
+              dbRequest.onblocked = () => resolve(true)
+            })
+
+            console.log(`✅ debugStorage: IndexedDB successful on attempt ${attempt}`)
+            break // Успешно получили данные
+          } else {
+            console.log(`❌ debugStorage: IndexedDB not available`)
+            break
+          }
+        } catch (error) {
+          console.log(`❌ debugStorage: Attempt ${attempt} failed:`, error)
+          if (attempt < 3) {
+            console.log(`⏳ debugStorage: Waiting 500ms before retry...`)
+            await new Promise((resolve) => setTimeout(resolve, 500))
+          } else {
+            indexedDBSupported = false
+            console.log("❌ debugStorage: All IndexedDB attempts failed")
+          }
         }
-      } catch (error) {
-        console.log("IndexedDB check error:", error)
       }
 
       const result = {

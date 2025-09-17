@@ -1,7 +1,7 @@
 {
   "name": "finance-tracker",
   "private": true,
-  "version": "1.2.6-20250917",
+  "version": "1.2.7-retry-fix",
   "type": "module",
   "scripts": {
     "dev": "vite",
