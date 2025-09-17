@@ -1,5 +1,5 @@
 import React from "react"
-import { Home, CreditCard, BarChart3, Settings } from "lucide-react"
+import { Home, CreditCard, BarChart3, Settings, Target } from "lucide-react"
 
 interface SidebarProps {
   currentPage: string
@@ -10,6 +10,7 @@ interface SidebarProps {
 const menuItems = [
   { id: "dashboard", label: "Главная", icon: Home },
   { id: "transactions", label: "Мои финансы", icon: CreditCard },
+  { id: "savings", label: "КопиКопи", icon: Target },
   { id: "analytics", label: "Отчеты", icon: BarChart3 },
   { id: "settings", label: "Настройки", icon: Settings }
 ]

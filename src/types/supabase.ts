@@ -57,3 +57,30 @@ export interface SupabaseBudgetRow {
   created_at: string
   updated_at: string
 }
+
+export interface SupabaseSavingsGoalRow {
+  id: string
+  user_id: string
+  name: string
+  description: string
+  target_amount: string // В БД это decimal, приходит как string
+  current_amount: string // В БД это decimal, приходит как string
+  color: string
+  icon: string
+  deadline: string | null // ISO string, может быть null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface SupabaseSavingsTransactionRow {
+  id: string
+  user_id: string
+  savings_goal_id: string
+  amount: string // В БД это decimal, приходит как string
+  type: "deposit" | "withdraw"
+  description: string
+  date: string // ISO string
+  created_at: string
+  updated_at: string
+}

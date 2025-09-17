@@ -5,6 +5,7 @@ import { supabaseSync } from "@/utils/supabaseSync"
 import { offlineDataManager } from "@/utils/offlineDataManager"
 import type { Category } from "@/types/category"
 import type { Transaction, CreateTransactionData } from "@/types/transaction"
+import type { SavingsGoal, SavingsTransaction } from "@/types/savingsGoal"
 
 interface SyncStatus {
   isSyncing: boolean
@@ -272,5 +273,51 @@ export const offlineUtils = {
   // Сохранение новой транзакции офлайн (для последующей синхронизации)
   saveTransactionOffline: async (transaction: Transaction): Promise<void> => {
     await indexedDBManager.saveTransaction(transaction)
+  },
+
+  // Сохранение сберегательных целей в офлайн хранилище
+  saveSavingsGoalsToCache: async (goals: SavingsGoal[]): Promise<void> => {
+    try {
+      await indexedDBManager.saveSavingsGoals(goals)
+    } catch (error) {
+      console.error("❌ Failed to save savings goals to cache:", error)
+      throw error
+    }
+  },
+
+  // Получение сберегательных целей из офлайн хранилища
+  getSavingsGoalsFromCache: async (): Promise<SavingsGoal[]> => {
+    try {
+      // console.log("💎 Getting savings goals from cache...")
+      const result: SavingsGoal[] = await indexedDBManager.getSavingsGoals()
+      // console.log(`💎 Retrieved ${result.length} savings goals from cache`)
+      return result
+    } catch (error) {
+      console.error("❌ Failed to get savings goals from cache:", error)
+      return []
+    }
+  },
+
+  // Сохранение транзакций сбережений в офлайн хранилище
+  saveSavingsTransactionsToCache: async (transactions: SavingsTransaction[]): Promise<void> => {
+    try {
+      await indexedDBManager.saveSavingsTransactions(transactions)
+    } catch (error) {
+      console.error("❌ Failed to save savings transactions to cache:", error)
+      throw error
+    }
+  },
+
+  // Получение транзакций сбережений из офлайн хранилища
+  getSavingsTransactionsFromCache: async (): Promise<SavingsTransaction[]> => {
+    try {
+      // console.log("💰 Getting savings transactions from cache...")
+      const result: SavingsTransaction[] = await indexedDBManager.getSavingsTransactions()
+      // console.log(`💰 Retrieved ${result.length} savings transactions from cache`)
+      return result
+    } catch (error) {
+      console.error("❌ Failed to get savings transactions from cache:", error)
+      return []
+    }
   }
 }

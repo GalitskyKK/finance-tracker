@@ -1,5 +1,5 @@
 import React from "react"
-import { Home, CreditCard, BarChart3, Settings } from "lucide-react"
+import { Home, CreditCard, BarChart3, Settings, Target } from "lucide-react"
 
 interface BottomNavigationProps {
   currentPage: string
@@ -10,8 +10,8 @@ interface BottomNavigationProps {
 const menuItems = [
   { id: "dashboard", label: "Главная", icon: Home },
   { id: "transactions", label: "Финансы", icon: CreditCard },
-  { id: "analytics", label: "Отчеты", icon: BarChart3 },
-  { id: "settings", label: "Настройки", icon: Settings }
+  { id: "savings", label: "КопиКопи", icon: Target },
+  { id: "analytics", label: "Отчеты", icon: BarChart3 }
 ]
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({

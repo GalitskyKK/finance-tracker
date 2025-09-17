@@ -7,6 +7,7 @@ import { DataMigrationModal } from "@/components/migration/DataMigrationModal"
 const Dashboard = React.lazy(() => import("@/pages/Dashboard"))
 const Transactions = React.lazy(() => import("@/pages/Transactions"))
 const Analytics = React.lazy(() => import("@/pages/Analytics"))
+const Savings = React.lazy(() => import("@/pages/Savings"))
 import { useAuthStore } from "@/store/authStore"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
@@ -180,6 +181,12 @@ export const AppWithMigration: React.FC = () => {
         return (
           <Suspense fallback={<PageLoadingSpinner />}>
             <Analytics />
+          </Suspense>
+        )
+      case "savings":
+        return (
+          <Suspense fallback={<PageLoadingSpinner />}>
+            <Savings />
           </Suspense>
         )
       case "settings":

@@ -18,8 +18,19 @@ export type {
   SupabaseCategoryRow,
   SupabaseTransactionRow,
   SupabaseProfileRow,
-  SupabaseBudgetRow
+  SupabaseBudgetRow,
+  SupabaseSavingsGoalRow,
+  SupabaseSavingsTransactionRow
 } from "./supabase"
+export type {
+  SavingsGoal,
+  CreateSavingsGoalData,
+  UpdateSavingsGoalData,
+  SavingsTransaction,
+  CreateSavingsTransactionData,
+  BalanceWithSavings,
+  SavingsGoalStats
+} from "./savingsGoal"
 
 // Общие типы для UI
 export interface SelectOption {

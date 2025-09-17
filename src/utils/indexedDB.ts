@@ -1,5 +1,6 @@
 import type { Category } from "@/types/category"
 import type { Transaction } from "@/types/transaction"
+import type { SavingsGoal, SavingsTransaction } from "@/types/savingsGoal"
 
 import type { CreateTransactionData } from "@/types/transaction"
 
@@ -25,7 +26,7 @@ type OfflineOperation = OfflineTransactionOperation | OfflineCategoryOperation
 
 class IndexedDBManager {
   private dbName = "finance-tracker-db"
-  private version = 2 // Увеличиваем версию для исправления схемы
+  private version = 3 // Увеличиваем версию для добавления сберегательных целей
   private db: IDBDatabase | null = null
   private isSupported = true
   private initAttempted = false
@@ -131,6 +132,19 @@ class IndexedDBManager {
           transactionStore.createIndex("categoryId", "categoryId", { unique: false })
           transactionStore.createIndex("type", "type", { unique: false })
           transactionStore.createIndex("date", "date", { unique: false })
+
+          // Новые stores для сберегательных целей
+          const savingsGoalStore = db.createObjectStore("savingsGoals", { keyPath: "id" })
+          savingsGoalStore.createIndex("isActive", "isActive", { unique: false })
+          savingsGoalStore.createIndex("targetAmount", "targetAmount", { unique: false })
+          savingsGoalStore.createIndex("createdAt", "createdAt", { unique: false })
+
+          const savingsTransactionStore = db.createObjectStore("savingsTransactions", {
+            keyPath: "id"
+          })
+          savingsTransactionStore.createIndex("savingsGoalId", "savingsGoalId", { unique: false })
+          savingsTransactionStore.createIndex("type", "type", { unique: false })
+          savingsTransactionStore.createIndex("date", "date", { unique: false })
 
           const queueStore = db.createObjectStore("offlineQueue", { keyPath: "id" })
           queueStore.createIndex("synced", "synced", { unique: false })
@@ -523,29 +537,276 @@ class IndexedDBManager {
 
   // ============ UTILITIES ============
 
+  // ============ SAVINGS GOALS ============
+
+  async saveSavingsGoals(goals: SavingsGoal[]): Promise<void> {
+    if (!this.isSupported) {
+      this.saveToLocalStorage("savingsGoals", goals)
+      return
+    }
+
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["savingsGoals"], "readwrite")
+      const store = transaction.objectStore("savingsGoals")
+
+      // Очищаем старые данные
+      store.clear()
+
+      // Добавляем новые данные
+      goals.forEach((goal) => {
+        store.add(goal)
+      })
+
+      return new Promise((resolve, reject) => {
+        transaction.oncomplete = (): void => resolve()
+        transaction.onerror = (): void => reject(transaction.error)
+      })
+    } catch (error) {
+      console.warn("IndexedDB failed, using localStorage:", error)
+      this.saveToLocalStorage("savingsGoals", goals)
+    }
+  }
+
+  async getSavingsGoals(): Promise<SavingsGoal[]> {
+    if (!this.isSupported) {
+      return this.getFromLocalStorage<SavingsGoal>("savingsGoals")
+    }
+
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["savingsGoals"], "readonly")
+      const store = transaction.objectStore("savingsGoals")
+      const request = store.getAll()
+
+      return new Promise((resolve, reject) => {
+        request.onsuccess = (): void => resolve(request.result || [])
+        request.onerror = (): void => reject(request.error)
+      })
+    } catch (error) {
+      console.warn("IndexedDB failed, using localStorage:", error)
+      return this.getFromLocalStorage<SavingsGoal>("savingsGoals")
+    }
+  }
+
+  async saveSavingsGoal(goal: SavingsGoal): Promise<void> {
+    if (!this.isSupported) {
+      const goals = this.getFromLocalStorage<SavingsGoal>("savingsGoals")
+      const updatedGoals = goals.filter((g) => g.id !== goal.id)
+      updatedGoals.push(goal)
+      this.saveToLocalStorage("savingsGoals", updatedGoals)
+      return
+    }
+
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["savingsGoals"], "readwrite")
+      const store = transaction.objectStore("savingsGoals")
+      store.put(goal)
+
+      return new Promise((resolve, reject) => {
+        transaction.oncomplete = (): void => resolve()
+        transaction.onerror = (): void => reject(transaction.error)
+      })
+    } catch (error) {
+      console.warn("IndexedDB failed, using localStorage:", error)
+      const goals = this.getFromLocalStorage<SavingsGoal>("savingsGoals")
+      const updatedGoals = goals.filter((g) => g.id !== goal.id)
+      updatedGoals.push(goal)
+      this.saveToLocalStorage("savingsGoals", updatedGoals)
+    }
+  }
+
+  async deleteSavingsGoal(id: string): Promise<void> {
+    if (!this.isSupported) {
+      const goals = this.getFromLocalStorage<SavingsGoal>("savingsGoals")
+      const updatedGoals = goals.filter((g) => g.id !== id)
+      this.saveToLocalStorage("savingsGoals", updatedGoals)
+      return
+    }
+
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["savingsGoals"], "readwrite")
+      const store = transaction.objectStore("savingsGoals")
+      store.delete(id)
+
+      return new Promise((resolve, reject) => {
+        transaction.oncomplete = (): void => resolve()
+        transaction.onerror = (): void => reject(transaction.error)
+      })
+    } catch (error) {
+      console.warn("IndexedDB failed, using localStorage:", error)
+      const goals = this.getFromLocalStorage<SavingsGoal>("savingsGoals")
+      const updatedGoals = goals.filter((g) => g.id !== id)
+      this.saveToLocalStorage("savingsGoals", updatedGoals)
+    }
+  }
+
+  // ============ SAVINGS TRANSACTIONS ============
+
+  async saveSavingsTransactions(transactions: SavingsTransaction[]): Promise<void> {
+    if (!this.isSupported) {
+      this.saveToLocalStorage("savingsTransactions", transactions)
+      return
+    }
+
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["savingsTransactions"], "readwrite")
+      const store = transaction.objectStore("savingsTransactions")
+
+      // Очищаем старые данные
+      store.clear()
+
+      // Добавляем новые данные
+      transactions.forEach((savingsTransaction) => {
+        store.add(savingsTransaction)
+      })
+
+      return new Promise((resolve, reject) => {
+        transaction.oncomplete = (): void => resolve()
+        transaction.onerror = (): void => reject(transaction.error)
+      })
+    } catch (error) {
+      console.warn("IndexedDB failed, using localStorage:", error)
+      this.saveToLocalStorage("savingsTransactions", transactions)
+    }
+  }
+
+  async getSavingsTransactions(): Promise<SavingsTransaction[]> {
+    if (!this.isSupported) {
+      return this.getFromLocalStorage<SavingsTransaction>("savingsTransactions")
+    }
+
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["savingsTransactions"], "readonly")
+      const store = transaction.objectStore("savingsTransactions")
+      const request = store.getAll()
+
+      return new Promise((resolve, reject) => {
+        request.onsuccess = (): void => resolve(request.result || [])
+        request.onerror = (): void => reject(request.error)
+      })
+    } catch (error) {
+      console.warn("IndexedDB failed, using localStorage:", error)
+      return this.getFromLocalStorage<SavingsTransaction>("savingsTransactions")
+    }
+  }
+
+  async saveSavingsTransaction(transaction: SavingsTransaction): Promise<void> {
+    if (!this.isSupported) {
+      const transactions = this.getFromLocalStorage<SavingsTransaction>("savingsTransactions")
+      const updatedTransactions = transactions.filter((t) => t.id !== transaction.id)
+      updatedTransactions.push(transaction)
+      this.saveToLocalStorage("savingsTransactions", updatedTransactions)
+      return
+    }
+
+    try {
+      const db = await this.ensureDB()
+      const dbTransaction = db.transaction(["savingsTransactions"], "readwrite")
+      const store = dbTransaction.objectStore("savingsTransactions")
+      store.put(transaction)
+
+      return new Promise((resolve, reject) => {
+        dbTransaction.oncomplete = (): void => resolve()
+        dbTransaction.onerror = (): void => reject(dbTransaction.error)
+      })
+    } catch (error) {
+      console.warn("IndexedDB failed, using localStorage:", error)
+      const transactions = this.getFromLocalStorage<SavingsTransaction>("savingsTransactions")
+      const updatedTransactions = transactions.filter((t) => t.id !== transaction.id)
+      updatedTransactions.push(transaction)
+      this.saveToLocalStorage("savingsTransactions", updatedTransactions)
+    }
+  }
+
+  async deleteSavingsTransaction(id: string): Promise<void> {
+    if (!this.isSupported) {
+      const transactions = this.getFromLocalStorage<SavingsTransaction>("savingsTransactions")
+      const updatedTransactions = transactions.filter((t) => t.id !== id)
+      this.saveToLocalStorage("savingsTransactions", updatedTransactions)
+      return
+    }
+
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(["savingsTransactions"], "readwrite")
+      const store = transaction.objectStore("savingsTransactions")
+      store.delete(id)
+
+      return new Promise((resolve, reject) => {
+        transaction.oncomplete = (): void => resolve()
+        transaction.onerror = (): void => reject(transaction.error)
+      })
+    } catch (error) {
+      console.warn("IndexedDB failed, using localStorage:", error)
+      const transactions = this.getFromLocalStorage<SavingsTransaction>("savingsTransactions")
+      const updatedTransactions = transactions.filter((t) => t.id !== id)
+      this.saveToLocalStorage("savingsTransactions", updatedTransactions)
+    }
+  }
+
+  // ============ UTILITIES ============
+
   async clearAllData(): Promise<void> {
-    const db = await this.ensureDB()
-    const transaction = db.transaction(
-      ["categories", "transactions", "offlineQueue", "metadata"],
-      "readwrite"
-    )
+    if (!this.isSupported) {
+      // Очищаем localStorage
+      localStorage.removeItem(this.getLocalStorageKey("categories"))
+      localStorage.removeItem(this.getLocalStorageKey("transactions"))
+      localStorage.removeItem(this.getLocalStorageKey("savingsGoals"))
+      localStorage.removeItem(this.getLocalStorageKey("savingsTransactions"))
+      return
+    }
 
-    transaction.objectStore("categories").clear()
-    transaction.objectStore("transactions").clear()
-    transaction.objectStore("offlineQueue").clear()
-    transaction.objectStore("metadata").clear()
+    try {
+      const db = await this.ensureDB()
+      const transaction = db.transaction(
+        [
+          "categories",
+          "transactions",
+          "savingsGoals",
+          "savingsTransactions",
+          "offlineQueue",
+          "metadata"
+        ],
+        "readwrite"
+      )
 
-    return new Promise((resolve, reject) => {
-      transaction.oncomplete = (): void => resolve()
-      transaction.onerror = (): void => reject(transaction.error)
-    })
+      transaction.objectStore("categories").clear()
+      transaction.objectStore("transactions").clear()
+      transaction.objectStore("savingsGoals").clear()
+      transaction.objectStore("savingsTransactions").clear()
+      transaction.objectStore("offlineQueue").clear()
+      transaction.objectStore("metadata").clear()
+
+      return new Promise((resolve, reject) => {
+        transaction.oncomplete = (): void => resolve()
+        transaction.onerror = (): void => reject(transaction.error)
+      })
+    } catch (error) {
+      console.warn("IndexedDB failed, clearing localStorage:", error)
+      localStorage.removeItem(this.getLocalStorageKey("categories"))
+      localStorage.removeItem(this.getLocalStorageKey("transactions"))
+      localStorage.removeItem(this.getLocalStorageKey("savingsGoals"))
+      localStorage.removeItem(this.getLocalStorageKey("savingsTransactions"))
+    }
   }
 
   async isDataAvailable(): Promise<boolean> {
     try {
       const categories = await this.getCategories()
       const transactions = await this.getTransactions()
-      return categories.length > 0 || transactions.length > 0
+      const savingsGoals = await this.getSavingsGoals()
+      const savingsTransactions = await this.getSavingsTransactions()
+      return (
+        categories.length > 0 ||
+        transactions.length > 0 ||
+        savingsGoals.length > 0 ||
+        savingsTransactions.length > 0
+      )
     } catch (_error) {
       // Error checking data availability
       return false
