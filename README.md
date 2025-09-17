@@ -229,19 +229,19 @@ npm run type-check # TypeScript type checking
 
 ## 🚧 **Roadmap**
 
-### **Phase 1: Core Enhancement** _(Q4 2025)_
+### **Phase 1: Core Enhancement** 
 
 - [ ] **Background Sync** - Sync even when app is closed
 - [ ] **Push Notifications** - Important financial alerts
 - [ ] **Advanced Filtering** - Complex search queries
 
-### **Phase 2: Financial Features** _(Q1 2026)_
+### **Phase 2: Financial Features** 
 
 - [ ] **Budget Management** - Set and track budgets
 - [ ] **Financial Goals** - Savings targets and progress
 - [ ] **Recurring Transactions** - Automatic transaction creation
 
-### **Phase 3: Intelligence** _(Q2 2026)_
+### **Phase 3: Intelligence** 
 
 - [ ] **AI Insights** - Smart financial recommendations
 - [ ] **Expense Predictions** - Forecast future spending
@@ -269,10 +269,6 @@ npm run type-check # TypeScript type checking
 - **📦 Bundle Size** - Optimized with code splitting
 - **🚀 Load Time** - < 2s initial load
 - **💾 Cache Size** - ~3MB for full offline functionality
-
-## 🤝 **Contributing**
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### **Development Setup**
 
@@ -308,4 +304,4 @@ npm install && npm run dev
 
 ---
 
-_Last updated: September 2025 | Version 1.2.8_
+_Last updated: September 2025 | Version 1.3.0_
