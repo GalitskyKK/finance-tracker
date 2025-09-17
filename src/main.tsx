@@ -7,7 +7,7 @@ import { registerSW } from "virtual:pwa-register"
 import type { Transaction, Category } from "./types"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-console.log("🚀 KashKontrol v1.2.8 starting...")
+console.log("🚀 KashKontrol v1.3.0 starting...")
 console.log("⚡ Built with React", React.version)
 
 // Типы для debugStorage
