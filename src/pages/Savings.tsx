@@ -178,84 +178,88 @@ const Savings: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-4 lg:py-8 space-y-4 lg:space-y-8">
       {/* Header */}
       <PageHeader title="КопиКопи" subtitle="Ваши сберегательные цели" />
 
-      {/* Balance overview */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Обзор баланса</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Общий баланс</p>
-            <p className="text-2xl font-bold text-gray-900">
+      {/* Mobile: Compact Balance overview */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 lg:p-6 border border-blue-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3 lg:mb-4">💰 Обзор баланса</h3>
+
+        {/* Mobile: 2x2 + 1 layout, Desktop: 3 columns */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+          <div className="text-center lg:col-span-1 col-span-2">
+            <p className="text-xs lg:text-sm text-gray-600 mb-1">Общий баланс</p>
+            <p className="text-lg lg:text-2xl font-bold text-gray-900">
               {formatCurrency(balanceData.totalBalance)}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-emerald-600 mb-1">Свободные средства</p>
-            <p className="text-2xl font-bold text-emerald-600">
+            <p className="text-xs lg:text-sm text-emerald-600 mb-1">Свободные</p>
+            <p className="text-lg lg:text-2xl font-bold text-emerald-600">
               {formatCurrency(balanceData.availableBalance)}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-blue-600 mb-1">В целях КопиКопи</p>
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-xs lg:text-sm text-blue-600 mb-1">В целях</p>
+            <p className="text-lg lg:text-2xl font-bold text-blue-600">
               {formatCurrency(balanceData.reservedBalance)}
             </p>
           </div>
         </div>
+
         {balanceData.availableBalance < 0 && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mt-3 lg:mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-start space-x-2">
               <span className="text-red-500 text-lg">⚠️</span>
               <div className="text-sm text-red-800">
                 <p className="font-medium">Внимание!</p>
-                <p>
+                <p className="hidden lg:block">
                   У вас отрицательный свободный баланс. Рассмотрите возможность снять деньги с
                   некоторых целей.
                 </p>
+                <p className="lg:hidden">Отрицательный баланс. Рассмотрите снятие с целей.</p>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
+      {/* Mobile: Compact Summary cards */}
+      <div className="grid grid-cols-3 lg:grid-cols-3 gap-3 lg:gap-6">
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-4 lg:p-6 text-white">
+          <div className="text-center lg:flex lg:items-center lg:justify-between">
             <div>
-              <h3 className="text-lg font-medium opacity-90">Активных целей</h3>
-              <p className="text-3xl font-bold">{inProgressGoals.length}</p>
+              <h3 className="text-sm lg:text-lg font-medium opacity-90">Активных</h3>
+              <p className="text-xl lg:text-3xl font-bold">{inProgressGoals.length}</p>
             </div>
-            <div className="text-4xl opacity-80">🎯</div>
+            <div className="text-2xl lg:text-4xl opacity-80 hidden lg:block">🎯</div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 lg:p-6 text-white">
+          <div className="text-center lg:flex lg:items-center lg:justify-between">
             <div>
-              <h3 className="text-lg font-medium opacity-90">Выполнено</h3>
-              <p className="text-3xl font-bold">{completedGoals.length}</p>
+              <h3 className="text-sm lg:text-lg font-medium opacity-90">Готово</h3>
+              <p className="text-xl lg:text-3xl font-bold">{completedGoals.length}</p>
             </div>
-            <div className="text-4xl opacity-80">🏆</div>
+            <div className="text-2xl lg:text-4xl opacity-80 hidden lg:block">🏆</div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 lg:p-6 text-white">
+          <div className="text-center lg:flex lg:items-center lg:justify-between">
             <div>
-              <h3 className="text-lg font-medium opacity-90">Всего накоплено</h3>
-              <p className="text-3xl font-bold">{formatCurrency(totalSavingsAmount)}</p>
+              <h3 className="text-sm lg:text-lg font-medium opacity-90">Накоплено</h3>
+              <p className="text-lg lg:text-3xl font-bold">{formatCurrency(totalSavingsAmount)}</p>
             </div>
-            <div className="text-4xl opacity-80">💰</div>
+            <div className="text-2xl lg:text-4xl opacity-80 hidden lg:block">💰</div>
           </div>
         </div>
       </div>
 
-      {/* Action button */}
-      <div className="flex justify-center">
+      {/* Desktop: Action button */}
+      <div className="hidden lg:flex justify-center">
         <Button
           onClick={() => setIsCreateModalOpen(true)}
           variant="primary"
@@ -272,25 +276,29 @@ const Savings: React.FC = () => {
           <p className="text-gray-600">Загружаем ваши цели...</p>
         </div>
       ) : activeGoals.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🎯</div>
-          <h3 className="text-xl font-medium text-gray-900 mb-2">Пока нет целей</h3>
-          <p className="text-gray-600 mb-6">
+        <div className="text-center py-8 lg:py-12">
+          <div className="text-4xl lg:text-6xl mb-3 lg:mb-4">🎯</div>
+          <h3 className="text-lg lg:text-xl font-medium text-gray-900 mb-2">Пока нет целей</h3>
+          <p className="text-sm lg:text-base text-gray-600 mb-4 lg:mb-6 px-4">
             Создайте свою первую сберегательную цель и начните копить на мечту!
           </p>
-          <Button onClick={() => setIsCreateModalOpen(true)} variant="primary">
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            variant="primary"
+            className="lg:inline-flex hidden">
             Создать первую цель
           </Button>
+          <p className="text-xs text-gray-500 mt-2 lg:hidden">Используйте кнопку ➕ справа внизу</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6 lg:space-y-8">
           {/* In progress goals */}
           {inProgressGoals.length > 0 && (
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-3 lg:mb-4">
                 Активные цели ({inProgressGoals.length})
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                 {inProgressGoals.map((goal) => (
                   <SavingsGoalCard
                     key={goal.id}
@@ -308,10 +316,10 @@ const Savings: React.FC = () => {
           {/* Completed goals */}
           {completedGoals.length > 0 && (
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-3 lg:mb-4">
                 Выполненные цели ({completedGoals.length})
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                 {completedGoals.map((goal) => (
                   <SavingsGoalCard
                     key={goal.id}
@@ -355,6 +363,14 @@ const Savings: React.FC = () => {
         loading={transactionLoading}
         availableBalance={balanceData.availableBalance}
       />
+
+      {/* Mobile: Floating Action Button */}
+      <button
+        onClick={() => setIsCreateModalOpen(true)}
+        className="lg:hidden fixed bottom-24 right-4 z-50 bg-emerald-500 hover:bg-emerald-600 text-white w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center text-2xl active:scale-95"
+        title="Создать новую цель">
+        ➕
+      </button>
     </div>
   )
 }

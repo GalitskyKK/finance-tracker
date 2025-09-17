@@ -43,18 +43,22 @@ export const SavingsGoalCard: React.FC<SavingsGoalCardProps> = ({
       ${isUrgent ? "border-amber-200 bg-amber-50" : ""}
       ${!isCompleted && !isExpired && !isUrgent ? "border-gray-200" : ""}
     `}>
-      <div className="p-6">
+      <div className="p-4 lg:p-6">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-start justify-between mb-3 lg:mb-4">
+          <div className="flex items-center space-x-2 lg:space-x-3 min-w-0 flex-1">
             <span
-              className="text-2xl w-10 h-10 rounded-full flex items-center justify-center"
+              className="text-xl lg:text-2xl w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: `${goal.color}20`, color: goal.color }}>
               {goal.icon}
             </span>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{goal.name}</h3>
-              {goal.description && <p className="text-sm text-gray-600 mt-1">{goal.description}</p>}
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base lg:text-lg font-semibold text-gray-900 truncate">
+                {goal.name}
+              </h3>
+              {goal.description && (
+                <p className="text-xs lg:text-sm text-gray-600 mt-1 truncate">{goal.description}</p>
+              )}
             </div>
           </div>
 
@@ -99,37 +103,44 @@ export const SavingsGoalCard: React.FC<SavingsGoalCardProps> = ({
         </div>
 
         {/* Amounts */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-3 lg:gap-4 mb-3 lg:mb-4">
           <div className="text-center">
             <p className="text-xs text-gray-500 mb-1">Накоплено</p>
-            <p className="text-lg font-bold" style={{ color: goal.color }}>
+            <p className="text-base lg:text-lg font-bold" style={{ color: goal.color }}>
               {formatCurrency(goal.currentAmount)}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 mb-1">Цель</p>
-            <p className="text-lg font-bold text-gray-900">{formatCurrency(goal.targetAmount)}</p>
+            <p className="text-base lg:text-lg font-bold text-gray-900">
+              {formatCurrency(goal.targetAmount)}
+            </p>
           </div>
         </div>
 
         {/* Remaining info */}
         {!isCompleted && (
-          <div className="bg-gray-50 rounded-lg p-3 mb-4">
+          <div className="bg-gray-50 rounded-lg p-2 lg:p-3 mb-3 lg:mb-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Осталось накопить:</span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-xs lg:text-sm text-gray-600">Осталось:</span>
+              <span className="text-xs lg:text-sm font-medium text-gray-900">
                 {formatCurrency(remainingAmount)}
               </span>
             </div>
 
             {goal.deadline && (
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-sm text-gray-600">Дедлайн:</span>
+              <div className="flex justify-between items-center mt-1 lg:mt-2">
+                <span className="text-xs lg:text-sm text-gray-600">Дедлайн:</span>
                 <span
-                  className={`text-sm font-medium ${
+                  className={`text-xs lg:text-sm font-medium ${
                     isExpired ? "text-red-600" : isUrgent ? "text-amber-600" : "text-gray-900"
                   }`}>
-                  {format(parseISO(goal.deadline), "d MMMM yyyy", { locale: ru })}
+                  <span className="hidden lg:inline">
+                    {format(parseISO(goal.deadline), "d MMMM yyyy", { locale: ru })}
+                  </span>
+                  <span className="lg:hidden">
+                    {format(parseISO(goal.deadline), "d.MM.yy", { locale: ru })}
+                  </span>
                   {daysToDeadline !== null && daysToDeadline >= 0 && (
                     <span className="ml-1 text-xs">({daysToDeadline} дн.)</span>
                   )}
@@ -141,27 +152,29 @@ export const SavingsGoalCard: React.FC<SavingsGoalCardProps> = ({
 
         {/* Action buttons */}
         {showActions && (
-          <div className="flex space-x-2">
+          <div className="flex space-x-1 lg:space-x-2">
             {!isCompleted && onDeposit && (
               <button
                 onClick={() => onDeposit(goal.id)}
-                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">
-                💰 Пополнить
+                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs lg:text-sm font-medium py-2 px-2 lg:px-4 rounded-lg transition-colors">
+                <span className="lg:hidden">💰</span>
+                <span className="hidden lg:inline">💰 Пополнить</span>
               </button>
             )}
 
             {goal.currentAmount > 0 && onWithdraw && (
               <button
                 onClick={() => onWithdraw(goal.id)}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">
-                💳 Снять
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-xs lg:text-sm font-medium py-2 px-2 lg:px-4 rounded-lg transition-colors">
+                <span className="lg:hidden">💳</span>
+                <span className="hidden lg:inline">💳 Снять</span>
               </button>
             )}
 
             {onEdit && (
               <button
                 onClick={() => onEdit(goal.id)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-2 px-3 rounded-lg transition-colors">
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs lg:text-sm font-medium py-2 px-2 lg:px-3 rounded-lg transition-colors">
                 ✏️
               </button>
             )}
@@ -169,7 +182,7 @@ export const SavingsGoalCard: React.FC<SavingsGoalCardProps> = ({
             {onDelete && (
               <button
                 onClick={() => onDelete(goal.id)}
-                className="bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium py-2 px-3 rounded-lg transition-colors">
+                className="bg-red-100 hover:bg-red-200 text-red-700 text-xs lg:text-sm font-medium py-2 px-2 lg:px-3 rounded-lg transition-colors">
                 🗑️
               </button>
             )}
