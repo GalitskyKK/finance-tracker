@@ -1,41 +1,43 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Фон с градиентом -->
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with emerald gradient -->
   <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+    <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#F8FAFC;stop-opacity:1" />
-    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
   </defs>
   
-  <!-- Основной фон -->
-  <rect width="512" height="512" rx="96" fill="url(#bgGradient)"/>
+  <!-- Rounded rectangle background -->
+  <rect width="64" height="64" rx="16" ry="16" fill="url(#emeraldGradient)" filter="url(#shadow)"/>
   
-  <!-- Карточка в центре -->
-  <rect x="80" y="80" width="352" height="352" rx="32" fill="url(#cardGradient)" stroke="#E2E8F0" stroke-width="2"/>
+  <!-- Inner highlight for depth -->
+  <rect x="2" y="2" width="60" height="60" rx="14" ry="14" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
   
-  <!-- Иконка кошелька -->
-  <rect x="140" y="140" width="232" height="160" rx="16" fill="#3B82F6" opacity="0.1"/>
-  <rect x="140" y="140" width="232" height="40" rx="16" fill="#3B82F6"/>
-  <rect x="160" y="200" width="192" height="80" rx="8" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="1"/>
+  <!-- First K -->
+  <g fill="white">
+    <!-- Vertical line of first K -->
+    <rect x="10" y="14" width="3" height="24" rx="1.5"/>
+    <!-- Upper diagonal of first K -->
+    <path d="M13 26 L23 14 L26 16.5 L16 28.5 Z" fill="white"/>
+    <!-- Lower diagonal of first K -->
+    <path d="M13 26 L23 38 L26 35.5 L16 23.5 Z" fill="white"/>
+  </g>
   
-  <!-- Dollar символ -->
-  <text x="256" y="250" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#3B82F6">$</text>
+  <!-- Second K -->
+  <g fill="white">
+    <!-- Vertical line of second K -->
+    <rect x="35" y="14" width="3" height="24" rx="1.5"/>
+    <!-- Upper diagonal of second K -->
+    <path d="M38 26 L48 14 L51 16.5 L41 28.5 Z" fill="white"/>
+    <!-- Lower diagonal of second K -->
+    <path d="M38 26 L48 38 L51 35.5 L41 23.5 Z" fill="white"/>
+  </g>
   
-  <!-- График роста -->
-  <path d="M160 340L200 320L240 300L280 280L320 260L352 240" stroke="#10B981" stroke-width="4" stroke-linecap="round" fill="none"/>
-  
-  <!-- Точки графика -->
-  <circle cx="200" cy="320" r="4" fill="#10B981"/>
-  <circle cx="240" cy="300" r="4" fill="#10B981"/>
-  <circle cx="280" cy="280" r="4" fill="#10B981"/>
-  <circle cx="320" cy="260" r="4" fill="#10B981"/>
-  
-  <!-- Дополнительные элементы UI -->
-  <circle cx="340" cy="160" r="8" fill="#F59E0B"/>
-  <circle cx="320" cy="160" r="6" fill="#EF4444"/>
-  <circle cx="360" cy="160" r="6" fill="#10B981"/>
+  <!-- Small dollar sign accent -->
+  <g fill="rgba(255,255,255,0.9)" font-family="Arial, sans-serif" font-size="8" font-weight="bold">
+    <text x="32" y="52" text-anchor="middle">$</text>
+  </g>
 </svg>
