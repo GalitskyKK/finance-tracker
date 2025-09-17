@@ -17,7 +17,7 @@ A modern **Personal Finance Tracker** built with React 18 and TypeScript - your 
 - **🛠️ Auto-Fix IndexedDB** - Seamless database schema correction
 - **⚡ Performance Boost** - Faster loading and smoother interactions on mobile
 
-[**📋 Full Changelog →**](docs/RELEASE_CHANGELOG_EN.md)
+[**📋 Full Changelog →**](RELEASE_CHANGELOG_EN.md)
 
 ## 🌟 **Key Features**
 
