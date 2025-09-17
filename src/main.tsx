@@ -6,8 +6,8 @@ import "./index.css"
 import { registerSW } from "virtual:pwa-register"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-console.log("🚀 Finance Tracker starting...")
-console.log("🚀 React version:", React.version)
+console.log("🔥 FINANCE TRACKER v2.0 LOADING!")
+console.log("🔥 React version:", React.version)
 
 // Типы для debugStorage
 declare global {
@@ -22,6 +22,7 @@ declare global {
 // Минимальная версия debugStorage для диагностики
 if (typeof window !== "undefined") {
   window.debugStorage = async () => {
+    console.log("🔥 debugStorage v2.0 called!")
     try {
       // Проверяем localStorage
       const localTransactions = localStorage.getItem("finance-tracker-transactions")
@@ -191,4 +192,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   </React.StrictMode>
 )
 
-console.log("✅ Finance Tracker started")
+console.log("🔥 FINANCE TRACKER v2.0 STARTED!")

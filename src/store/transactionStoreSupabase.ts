@@ -158,7 +158,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
   },
 
   addTransaction: async (transactionData: CreateTransactionData): Promise<void> => {
-    console.log("💾 Adding transaction online:", transactionData.description)
+    console.log("🔥 STORE addTransaction CALLED:", transactionData.description)
     set({ loading: true, error: null })
 
     try {
@@ -315,7 +315,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
   },
 
   addTransactionOffline: async (transactionData: CreateTransactionData): Promise<void> => {
-    console.log("📱 Adding transaction offline:", transactionData.description)
+    console.log("🔥 STORE addTransactionOffline CALLED:", transactionData.description)
     set({ loading: true, error: null })
 
     try {

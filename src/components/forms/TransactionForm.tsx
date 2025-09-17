@@ -62,7 +62,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   }))
 
   const onSubmit = async (data: CreateTransactionData): Promise<void> => {
-    console.log("🟡 TransactionForm onSubmit called:", { data, isOnline, isEditing })
+    console.log("🚀 FORM SUBMIT:", { description: data.description, isOnline, amount: data.amount })
     try {
       // Преобразуем amount в число
       const processedData = {
@@ -80,11 +80,13 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       } else {
         // Создание: онлайн или офлайн
         if (isOnline) {
-          console.log("🟡 Online mode, calling addTransaction")
+          console.log("🌐 CALLING ONLINE addTransaction")
           await addTransaction(processedData)
+          console.log("✅ ONLINE addTransaction completed")
         } else {
-          console.log("🟡 Offline mode, calling addTransactionOffline")
+          console.log("📱 CALLING OFFLINE addTransactionOffline")
           await addTransactionOffline(processedData)
+          console.log("✅ OFFLINE addTransactionOffline completed")
         }
       }
 

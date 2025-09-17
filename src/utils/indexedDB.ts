@@ -273,10 +273,7 @@ class IndexedDBManager {
   // ============ TRANSACTIONS ============
 
   async saveTransactions(transactions: Transaction[]): Promise<void> {
-    console.log("🟡 saveTransactions called:", {
-      count: transactions.length,
-      isSupported: this.isSupported
-    })
+    console.log("🔥 INDEXEDDB saveTransactions:", transactions.length, "transactions")
 
     // УПРОЩЕНО: Всегда пытаемся IndexedDB, fallback в catch
     if (!this.isSupported) {
