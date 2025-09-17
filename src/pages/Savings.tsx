@@ -99,6 +99,19 @@ const Savings: React.FC = () => {
     }
   }
 
+  // Обертки для совместимости с union типом
+  const handleCreateGoalWrapper = async (
+    data: CreateSavingsGoalData | UpdateSavingsGoalData
+  ): Promise<void> => {
+    return await handleCreateGoal(data as CreateSavingsGoalData)
+  }
+
+  const handleUpdateGoalWrapper = async (
+    data: CreateSavingsGoalData | UpdateSavingsGoalData
+  ): Promise<void> => {
+    return await handleUpdateGoal(data as UpdateSavingsGoalData)
+  }
+
   const handleDeleteGoal = async (goalId: string): Promise<void> => {
     const goal = savingsGoals.find((g) => g.id === goalId)
     if (!goal) return
@@ -171,7 +184,9 @@ const Savings: React.FC = () => {
           <div className="text-red-500 text-6xl mb-4">❌</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">Ошибка загрузки</h3>
           <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => fetchSavingsGoals()}>Попробовать снова</Button>
+          <Button variant="primary" onClick={() => fetchSavingsGoals()}>
+            Попробовать снова
+          </Button>
         </div>
       </div>
     )
@@ -340,7 +355,7 @@ const Savings: React.FC = () => {
       <SavingsGoalForm
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateGoal}
+        onSubmit={handleCreateGoalWrapper}
         loading={formLoading}
       />
 
@@ -348,7 +363,7 @@ const Savings: React.FC = () => {
       <SavingsGoalForm
         isOpen={!!editingGoal}
         onClose={() => setEditingGoal(null)}
-        onSubmit={handleUpdateGoal}
+        onSubmit={handleUpdateGoalWrapper}
         goal={editingGoal || undefined}
         loading={formLoading}
       />

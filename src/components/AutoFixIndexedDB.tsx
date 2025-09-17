@@ -25,7 +25,7 @@ export const AutoFixIndexedDB: React.FC = () => {
           try {
             // Тихо пересоздаем IndexedDB
             await indexedDBManager.forceReinitializeDB()
-          } catch (fixError) {
+          } catch (_fixError) {
             // Если исправление не удалось - приложение продолжит работать на localStorage
             // Не показываем ошибки пользователю
           }

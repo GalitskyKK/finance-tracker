@@ -7,8 +7,11 @@ import { registerSW } from "virtual:pwa-register"
 import type { Transaction, Category } from "./types"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-console.log("🚀 КопиКопи v1.4.0 starting...")
-console.log("⚡ Built with React", React.version)
+// КопиКопи v1.5.0 - Financial Management PWA
+if (import.meta.env.DEV) {
+  console.log("🚀 КопиКопи v1.5.0 starting...")
+  console.log("⚡ Built with React", React.version)
+}
 
 // Типы для debugStorage
 declare global {
@@ -25,7 +28,7 @@ declare global {
 // Минимальная версия debugStorage для диагностики
 if (typeof window !== "undefined") {
   window.debugStorage = async (): Promise<unknown> => {
-    console.log("🔍 Debug storage analysis...")
+    if (import.meta.env.DEV) console.log("🔍 Debug storage analysis...")
     try {
       // Проверяем localStorage
       const localTransactions = localStorage.getItem("finance-tracker-transactions")
@@ -232,15 +235,15 @@ if (typeof window !== "undefined") {
       if ("indexedDB" in window) {
         await new Promise<void>((resolve, reject) => {
           const deleteRequest = indexedDB.deleteDatabase("finance-tracker-db")
-          deleteRequest.onsuccess = () => {
+          deleteRequest.onsuccess = (): void => {
             console.log("✅ IndexedDB deleted successfully")
             resolve()
           }
-          deleteRequest.onerror = () => {
+          deleteRequest.onerror = (): void => {
             console.error("❌ Failed to delete IndexedDB")
             reject(deleteRequest.error)
           }
-          deleteRequest.onblocked = () => {
+          deleteRequest.onblocked = (): void => {
             console.warn("⚠️ IndexedDB deletion blocked")
             alert("⚠️ Закройте все остальные вкладки с КопиКопи и попробуйте снова")
             resolve() // Продолжаем

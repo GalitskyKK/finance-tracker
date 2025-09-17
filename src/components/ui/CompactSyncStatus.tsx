@@ -1,5 +1,5 @@
 import React from "react"
-import { Cloud, CloudOff, RefreshCw, AlertCircle, CheckCircle, Clock } from "lucide-react"
+import { Cloud, CloudOff, RefreshCw, AlertCircle, Clock } from "lucide-react"
 import { useOfflineSync } from "@/hooks/useOfflineSync"
 import { useNetworkStatus } from "@/hooks/useNetworkStatus"
 

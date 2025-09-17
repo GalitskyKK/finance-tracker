@@ -7,6 +7,18 @@ A modern **Personal Finance Tracker** built with React 18 and TypeScript - your 
 [![PWA](https://img.shields.io/badge/PWA-Ready-green.svg)](https://web.dev/progressive-web-apps/)
 [![Offline](https://img.shields.io/badge/Offline-First-orange.svg)](https://web.dev/offline-first/)
 
+## 🆕 **What's New in v1.5.0**
+
+### 📱 **Mobile Optimization**
+
+- **🎯 Smart Sync Status** - Compact header icon with auto-hide notifications
+- **🔄 Floating Action Button** - Native-style FAB for quick goal creation
+- **📊 Adaptive Layouts** - Optimized KopiKopi page for mobile screens
+- **🛠️ Auto-Fix IndexedDB** - Seamless database schema correction
+- **⚡ Performance Boost** - Faster loading and smoother interactions on mobile
+
+[**📋 Full Changelog →**](docs/RELEASE_CHANGELOG_EN.md)
+
 ## 🌟 **Key Features**
 
 ### 💸 **Transaction Management**
@@ -304,4 +316,4 @@ npm install && npm run dev
 
 ---
 
-_Last updated: September 2025 | Version 1.4.0 - КопиКопи Feature_
+_Last updated: September 2025 | Version 1.5.0 - Mobile Optimization_

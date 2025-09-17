@@ -592,7 +592,7 @@ class IndexedDBManager {
               transaction.oncomplete = (): void => resolve()
               transaction.onerror = (): void => reject(transaction.error)
             })
-          } catch (retryError) {
+          } catch (_retryError) {
             // Если повторная попытка не удалась, используем localStorage
             this.saveToLocalStorage("savingsGoals", goals)
           }
@@ -640,7 +640,7 @@ class IndexedDBManager {
               request.onsuccess = (): void => resolve(request.result || [])
               request.onerror = (): void => reject(request.error)
             })
-          } catch (retryError) {
+          } catch (_retryError) {
             // Если повторная попытка не удалась, используем localStorage
             return this.getFromLocalStorage<SavingsGoal>("savingsGoals")
           }
@@ -753,7 +753,7 @@ class IndexedDBManager {
               transaction.oncomplete = (): void => resolve()
               transaction.onerror = (): void => reject(transaction.error)
             })
-          } catch (retryError) {
+          } catch (_retryError) {
             // Если повторная попытка не удалась, используем localStorage
             this.saveToLocalStorage("savingsTransactions", transactions)
           }
@@ -801,7 +801,7 @@ class IndexedDBManager {
               request.onsuccess = (): void => resolve(request.result || [])
               request.onerror = (): void => reject(request.error)
             })
-          } catch (retryError) {
+          } catch (_retryError) {
             // Если повторная попытка не удалась, используем localStorage
             return this.getFromLocalStorage<SavingsTransaction>("savingsTransactions")
           }
@@ -888,9 +888,9 @@ class IndexedDBManager {
       await Promise.race([
         new Promise<void>((resolve, reject) => {
           const deleteRequest = indexedDB.deleteDatabase(this.dbName)
-          deleteRequest.onsuccess = () => resolve()
-          deleteRequest.onerror = () => reject(deleteRequest.error)
-          deleteRequest.onblocked = () => resolve() // Продолжаем даже если заблокировано
+          deleteRequest.onsuccess = (): void => resolve()
+          deleteRequest.onerror = (): void => reject(deleteRequest.error)
+          deleteRequest.onblocked = (): void => resolve() // Продолжаем даже если заблокировано
         }),
         new Promise<void>((resolve) => setTimeout(resolve, 3000)) // Таймаут 3 секунды
       ])
@@ -902,7 +902,7 @@ class IndexedDBManager {
       // Инициализируем заново
       await this.init()
       return true
-    } catch (error) {
+    } catch (_error) {
       // Если автоматическое исправление не удалось, переходим на localStorage
       this.isSupported = false
       return false
@@ -923,15 +923,15 @@ class IndexedDBManager {
     try {
       await new Promise<void>((resolve, reject) => {
         const deleteRequest = indexedDB.deleteDatabase(this.dbName)
-        deleteRequest.onsuccess = () => {
+        deleteRequest.onsuccess = (): void => {
           console.log("✅ IndexedDB deleted successfully")
           resolve()
         }
-        deleteRequest.onerror = () => {
+        deleteRequest.onerror = (): void => {
           console.error("❌ Failed to delete IndexedDB")
           reject(deleteRequest.error)
         }
-        deleteRequest.onblocked = () => {
+        deleteRequest.onblocked = (): void => {
           console.warn("⚠️ IndexedDB deletion blocked - close all tabs and try again")
           reject(new Error("Database deletion blocked"))
         }

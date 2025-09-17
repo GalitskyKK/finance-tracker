@@ -19,6 +19,7 @@ export interface CreateSavingsGoalData {
   color: string
   icon: string
   deadline?: string
+  isActive?: boolean // Опциональное поле для совместимости с update
 }
 
 export interface UpdateSavingsGoalData extends Partial<CreateSavingsGoalData> {

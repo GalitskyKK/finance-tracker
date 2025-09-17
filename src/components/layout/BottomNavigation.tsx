@@ -1,5 +1,5 @@
 import React from "react"
-import { Home, CreditCard, BarChart3, Settings, Target } from "lucide-react"
+import { Home, CreditCard, BarChart3, Target } from "lucide-react"
 
 interface BottomNavigationProps {
   currentPage: string
