@@ -6,9 +6,9 @@ import "./index.css"
 import { registerSW } from "virtual:pwa-register"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-console.log("🚨🚨🚨 FINANCE TRACKER v1.2.4 LOADING! 🚨🚨🚨")
+console.log("🚨 FINANCE TRACKER v1.2.5 LOADING!")
 console.log("🚨 React version:", React.version)
-alert("🚨 НОВАЯ ВЕРСИЯ 1.2.4 ЗАГРУЗИЛАСЬ! 🚨")
+// alert убран для чистоты логов
 
 // Типы для debugStorage
 declare global {
@@ -186,11 +186,9 @@ const updateSW = registerSW({
 })
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </React.StrictMode>
+  <QueryClientProvider client={queryClient}>
+    <App />
+  </QueryClientProvider>
 )
 
 console.log("🔥 FINANCE TRACKER v2.0 STARTED!")

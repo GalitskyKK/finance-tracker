@@ -159,7 +159,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
 
   addTransaction: async (transactionData: CreateTransactionData): Promise<void> => {
     console.log("🚨🚨🚨 STORE addTransaction CALLED:", transactionData.description)
-    alert(`🚨 STORE: addTransaction ВЫЗВАН для "${transactionData.description}"`)
+    // alert убран для чистоты логов
     set({ loading: true, error: null })
 
     try {
@@ -207,10 +207,10 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
       // КРИТИЧНО: Сохраняем в кэш для офлайн доступа
       try {
         console.log("🚨🚨🚨 CACHING START:", updatedTransactions.length, "transactions")
-        alert(`🚨 КЭШИРОВАНИЕ: Начинаю кэшировать ${updatedTransactions.length} транзакций`)
+        // alert убран для чистоты логов
         await offlineUtils.saveTransactionsToCache(updatedTransactions)
         console.log(`✅ Transaction cached for offline access`)
-        alert("🚨 КЭШИРОВАНИЕ ЗАВЕРШЕНО!")
+        // alert убран для чистоты логов
       } catch (cacheError) {
         console.error("❌ Caching failed:", cacheError)
         alert(`🚨 ОШИБКА КЭШИРОВАНИЯ: ${cacheError}`)
@@ -321,7 +321,7 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
 
   addTransactionOffline: async (transactionData: CreateTransactionData): Promise<void> => {
     console.log("🚨🚨🚨 STORE addTransactionOffline CALLED:", transactionData.description)
-    alert(`🚨 STORE: addTransactionOffline ВЫЗВАН для "${transactionData.description}"`)
+    // alert убран для чистоты логов
     set({ loading: true, error: null })
 
     try {
@@ -334,9 +334,9 @@ export const useTransactionStoreSupabase = create<TransactionState>((set, get) =
 
       // Обновляем кэш с новыми данными
       console.log("🚨🚨🚨 OFFLINE CACHING START:", updatedTransactions.length, "transactions")
-      alert(`🚨 ОФЛАЙН КЭШИРОВАНИЕ: Начинаю кэшировать ${updatedTransactions.length} транзакций`)
+      // alert убран для чистоты логов
       await offlineUtils.saveTransactionsToCache(updatedTransactions)
-      alert("🚨 ОФЛАЙН КЭШИРОВАНИЕ ЗАВЕРШЕНО!")
+      // alert убран для чистоты логов
 
       set({
         transactions: updatedTransactions,

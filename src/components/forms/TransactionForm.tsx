@@ -67,7 +67,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       isOnline,
       amount: data.amount
     })
-    alert(`🚨 ФОРМА ОТПРАВЛЕНА: ${data.description} (${isOnline ? "ОНЛАЙН" : "ОФЛАЙН"})`)
+    // alert убран для чистоты логов
     try {
       // Преобразуем amount в число
       const processedData = {

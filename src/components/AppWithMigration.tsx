@@ -11,7 +11,7 @@ import { useAuthStore } from "@/store/authStore"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
 import { useNetworkStatus } from "@/hooks/useNetworkStatus"
-import { useOfflineSync } from "@/hooks/useOfflineSync"
+// import { useOfflineSync } from "@/hooks/useOfflineSync" // Временно отключен
 import { getDataStats } from "@/utils/dataExport"
 
 export const AppWithMigration: React.FC = () => {
@@ -20,10 +20,8 @@ export const AppWithMigration: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false)
 
   const { isAuthenticated, user, loading: authLoading } = useAuthStore()
-  const { fetchTransactions, loadFromCache } = useTransactionStoreSupabase()
-  const { fetchCategories } = useCategoryStoreSupabase()
+  // Removed unused: fetchTransactions, loadFromCache, fetchCategories, syncNow, syncStatus
   const { isOnline } = useNetworkStatus()
-  const { syncNow, syncStatus } = useOfflineSync()
 
   // Инициализация данных после аутентификации
   useEffect(() => {
@@ -32,17 +30,7 @@ export const AppWithMigration: React.FC = () => {
         return
       }
 
-      // Предотвращаем повторную инициализацию, но позволяем обновление при смене сети
-      if (isInitialized && isOnline) {
-        // Если уже инициализировались и сейчас онлайн, перезагружаем данные
-        try {
-          await Promise.all([fetchCategories(), fetchTransactions()])
-        } catch {
-          // Failed to refresh data
-        }
-        return
-      }
-
+      // Предотвращаем повторную инициализацию
       if (isInitialized) {
         return
       }
@@ -52,22 +40,26 @@ export const AppWithMigration: React.FC = () => {
 
         console.log(`🔄 Initializing data in ${isOnline ? "ONLINE" : "OFFLINE"} mode`)
 
+        // Получаем свежие функции из store
+        const { fetchTransactions: freshFetchTransactions, loadFromCache: freshLoadFromCache } =
+          useTransactionStoreSupabase.getState()
+        const { fetchCategories: freshFetchCategories, loadFromCache: loadCategoriesFromCache } =
+          useCategoryStoreSupabase.getState()
+
         if (isOnline) {
           // Онлайн: загружаем данные с сервера (fetchTransactions сначала загрузит кэш, потом сервер)
-          await Promise.all([fetchCategories(), fetchTransactions()])
+          await Promise.all([freshFetchCategories(), freshFetchTransactions()])
           console.log("✅ Online data loaded")
         } else {
           // Офлайн: загружаем только из кэша
           try {
-            // Загружаем категории из кэша
-            const { loadFromCache: loadCategoriesFromCache } = useCategoryStoreSupabase.getState()
-            await Promise.all([loadCategoriesFromCache(), loadFromCache()])
+            await Promise.all([loadCategoriesFromCache(), freshLoadFromCache()])
             console.log("✅ Offline data loaded from cache")
           } catch (error) {
             console.error("❌ Offline loading failed:", error)
             // Failed to load from cache in offline mode - try individual loads
             try {
-              await loadFromCache()
+              await freshLoadFromCache()
             } catch (error2) {
               // Failed to load transactions from cache
             }
@@ -92,16 +84,15 @@ export const AppWithMigration: React.FC = () => {
     initializeData()
   }, [
     isAuthenticated,
-    user,
+    user?.id, // Только ID пользователя, не весь объект
     authLoading,
-    fetchCategories,
-    fetchTransactions,
-    loadFromCache,
-    isOnline,
-    isInitialized
+    isInitialized // Убираем isOnline чтобы не перезапускать при смене сети
+    // Убираем функции store - они могут пересоздаваться
   ])
 
-  // Автоматическая синхронизация при восстановлении сети
+  // ВРЕМЕННО ОТКЛЮЧЕНО: Автоматическая синхронизация при восстановлении сети
+  // (для диагностики множественных вызовов кэширования)
+  /*
   useEffect(() => {
     if (isOnline && isAuthenticated && isInitialized && syncStatus.pendingOperations > 0) {
       // Небольшая задержка чтобы убедиться что соединение стабильно
@@ -114,13 +105,16 @@ export const AppWithMigration: React.FC = () => {
       return (): void => clearTimeout(timer)
     }
   }, [isOnline, isAuthenticated, isInitialized, syncStatus.pendingOperations, syncNow])
+  */
 
   const handleMigrationClose = useCallback((): void => {
     setShowMigrationModal(false)
     // После закрытия модала миграции обновляем данные
-    fetchCategories()
-    fetchTransactions()
-  }, [fetchCategories, fetchTransactions])
+    const { fetchCategories: freshFetchCategories } = useCategoryStoreSupabase.getState()
+    const { fetchTransactions: freshFetchTransactions } = useTransactionStoreSupabase.getState()
+    freshFetchCategories()
+    freshFetchTransactions()
+  }, [])
 
   const renderPage = (): JSX.Element => {
     switch (currentPage) {
