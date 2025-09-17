@@ -153,7 +153,6 @@ export default defineConfig({
           "react-vendor": ["react", "react-dom"],
           "supabase-vendor": ["@supabase/supabase-js"],
           "query-vendor": ["@tanstack/react-query"],
-          "chart-vendor": ["recharts"],
           "form-vendor": ["react-hook-form"],
           "date-vendor": ["date-fns"],
           "icon-vendor": ["lucide-react"],
