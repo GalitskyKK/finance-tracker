@@ -6,8 +6,9 @@ import "./index.css"
 import { registerSW } from "virtual:pwa-register"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-console.log("🔥 FINANCE TRACKER v2.0 LOADING!")
-console.log("🔥 React version:", React.version)
+console.log("🚨🚨🚨 FINANCE TRACKER v1.2.4 LOADING! 🚨🚨🚨")
+console.log("🚨 React version:", React.version)
+alert("🚨 НОВАЯ ВЕРСИЯ 1.2.4 ЗАГРУЗИЛАСЬ! 🚨")
 
 // Типы для debugStorage
 declare global {

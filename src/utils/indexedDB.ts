@@ -179,13 +179,17 @@ class IndexedDBManager {
   }
 
   private saveToLocalStorage<T>(table: string, data: T[]): void {
+    console.log(`🚨🚨🚨 saveToLocalStorage: ${data.length} ${table}`)
+    alert(`🚨 LOCALSTORAGE: Сохраняю ${data.length} записей в ${table}`)
     try {
       const key = this.getLocalStorageKey(table)
       const serialized = JSON.stringify(data)
       localStorage.setItem(key, serialized)
       console.log(`✅ localStorage saved: ${data.length} ${table}`)
+      alert(`🚨 LOCALSTORAGE УСПЕХ: ${data.length} ${table}`)
     } catch (error) {
       console.error(`❌ localStorage error:`, error)
+      alert(`🚨 LOCALSTORAGE ОШИБКА: ${error}`)
       throw new Error(
         `Failed to save to localStorage: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -273,7 +277,8 @@ class IndexedDBManager {
   // ============ TRANSACTIONS ============
 
   async saveTransactions(transactions: Transaction[]): Promise<void> {
-    console.log("🔥 INDEXEDDB saveTransactions:", transactions.length, "transactions")
+    console.log("🚨🚨🚨 INDEXEDDB saveTransactions:", transactions.length, "transactions")
+    alert(`🚨 INDEXEDDB: Сохраняю ${transactions.length} транзакций`)
 
     // УПРОЩЕНО: Всегда пытаемся IndexedDB, fallback в catch
     if (!this.isSupported) {

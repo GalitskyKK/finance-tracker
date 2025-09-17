@@ -62,7 +62,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   }))
 
   const onSubmit = async (data: CreateTransactionData): Promise<void> => {
-    console.log("🚀 FORM SUBMIT:", { description: data.description, isOnline, amount: data.amount })
+    console.log("🚨🚨🚨 FORM SUBMIT:", {
+      description: data.description,
+      isOnline,
+      amount: data.amount
+    })
+    alert(`🚨 ФОРМА ОТПРАВЛЕНА: ${data.description} (${isOnline ? "ОНЛАЙН" : "ОФЛАЙН"})`)
     try {
       // Преобразуем amount в число
       const processedData = {
