@@ -225,7 +225,6 @@ if (typeof window !== "undefined") {
   // Функция для тестирования store напрямую
   window.testStore = (): string => {
     try {
-      // @ts-expect-error - тестируем store напрямую
       const store =
         (window as unknown as { __TRANSACTION_STORE__?: Record<string, unknown> })
           .__TRANSACTION_STORE__ ?? {}
