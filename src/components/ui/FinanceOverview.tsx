@@ -1,6 +1,7 @@
-import React from "react"
+import React, { useState } from "react"
 import { CategoryCard } from "./CategoryCard"
 import { formatCurrency } from "@/utils/formatters"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 interface CategoryData {
   id: string
@@ -22,6 +23,7 @@ interface FinanceOverviewProps {
   period?: string
   className?: string
   onCategoryClick?: (categoryId: string) => void
+  maxVisibleCategories?: number
 }
 
 export const FinanceOverview: React.FC<FinanceOverviewProps> = ({
@@ -30,10 +32,16 @@ export const FinanceOverview: React.FC<FinanceOverviewProps> = ({
   type,
   period = "",
   className = "",
-  onCategoryClick
+  onCategoryClick,
+  maxVisibleCategories = 4
 }) => {
-  // Показываем все категории (не ограничиваем до 4)
+  const [showAllCategories, setShowAllCategories] = useState(false)
+
   const sortedCategories = categories.sort((a, b) => b.amount - a.amount)
+  const visibleCategories = showAllCategories
+    ? sortedCategories
+    : sortedCategories.slice(0, maxVisibleCategories)
+  const hiddenCount = sortedCategories.length - maxVisibleCategories
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -46,9 +54,9 @@ export const FinanceOverview: React.FC<FinanceOverviewProps> = ({
       )}
 
       {/* Categories List */}
-      {sortedCategories.length > 0 ? (
+      {visibleCategories.length > 0 ? (
         <div className="bg-white rounded-xl shadow-sm divide-y divide-gray-100">
-          {sortedCategories.map((category) => (
+          {visibleCategories.map((category) => (
             <CategoryCard
               key={category.id}
               name={category.name}
@@ -61,6 +69,27 @@ export const FinanceOverview: React.FC<FinanceOverviewProps> = ({
               onClick={() => onCategoryClick?.(category.id)}
             />
           ))}
+
+          {/* Show More/Less Button */}
+          {hiddenCount > 0 && (
+            <div className="p-4">
+              <button
+                onClick={() => setShowAllCategories(!showAllCategories)}
+                className="w-full flex items-center justify-center py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                {showAllCategories ? (
+                  <>
+                    <ChevronUp className="w-4 h-4 mr-1" />
+                    Скрыть
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4 mr-1" />
+                    Ещё {hiddenCount} {hiddenCount === 1 ? "категория" : "категорий"}
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         /* Empty state */

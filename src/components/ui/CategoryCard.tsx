@@ -20,7 +20,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
   name,
   amount,
   totalAmount,
-  color,
+  color: _color,
   icon,
   className = "",
   onClick,

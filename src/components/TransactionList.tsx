@@ -9,7 +9,7 @@ import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { useCategoryStoreSupabase } from "@/store/categoryStoreSupabase"
 import { useTransactionFilterStore } from "@/store/transactionFilterStore"
 import { Transaction, FilterOptions } from "@/types"
-import { formatDate, formatAmountWithSign } from "@/utils/formatters"
+import { formatDate, formatAmountWithSign, formatCurrency } from "@/utils/formatters"
 
 interface TransactionListProps {
   className?: string
@@ -27,7 +27,7 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
   transaction,
   category,
   onEdit,
-  onDelete,
+  onDelete
 }) => {
   const isIncome = transaction.type === "income"
 
@@ -234,36 +234,49 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
     }))
   ]
 
+  // Группировка транзакций по дням
+  const groupedTransactions = useMemo(() => {
+    const groups: Record<string, Transaction[]> = {}
+
+    sortedTransactions.forEach((transaction) => {
+      const dateKey = transaction.date.split("T")[0] // YYYY-MM-DD формат
+      if (!groups[dateKey]) {
+        groups[dateKey] = []
+      }
+      groups[dateKey].push(transaction)
+    })
+
+    // Сортируем группы по дате (новые сверху)
+    return Object.entries(groups)
+      .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
+      .map(([date, transactions]) => ({
+        date,
+        transactions: transactions.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      }))
+  }, [sortedTransactions])
+
   return (
     <div className={className}>
-      {/* Компактный заголовок с действиями */}
+      {/* Фильтры */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Транзакции</h1>
-            <p className="text-gray-500 text-sm mt-1">Управление доходами и расходами</p>
-          </div>
-          <div className="flex space-x-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className={`${
-                showFilters ? "!bg-emerald-50 !text-emerald-700 !border-emerald-200" : ""
-              }`}>
-              <Filter className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Фильтры</span>
-              {hasActiveFilters && (
-                <span className="ml-1 bg-emerald-500 text-white rounded-full px-1.5 py-0.5 text-xs">
-                  {Object.values(filters).filter((v) => v && v !== "all").length}
-                </span>
-              )}
-            </Button>
-            <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Добавить</span>
-            </Button>
-          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className={`${
+              showFilters ? "!bg-emerald-50 !text-emerald-700 !border-emerald-200" : ""
+            }`}>
+            <Filter className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Фильтры</span>
+            {hasActiveFilters && (
+              <span className="ml-1 bg-emerald-500 text-white rounded-full px-1.5 py-0.5 text-xs">
+                {Object.values(filters).filter((v) => v && v !== "all").length}
+              </span>
+            )}
+          </Button>
         </div>
 
         {/* Информация о активном фильтре с дашборда */}
@@ -372,9 +385,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Подсказка о кликабельности (только на мобильных) */}
-            <div className="lg:hidden bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center space-x-2 text-sm text-emerald-700">
+            {/* <div className="lg:hidden bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center space-x-2 text-sm text-emerald-700">
               <svg
                 className="w-4 h-4 flex-shrink-0"
                 fill="none"
@@ -388,109 +401,141 @@ export const TransactionList: React.FC<TransactionListProps> = ({ className = ""
                 />
               </svg>
               <span>Нажмите на транзакцию для просмотра деталей</span>
-            </div>
+            </div> */}
 
-            <div className="space-y-3">
-              {sortedTransactions.map((transaction) => {
-                const category = getCategoryById(transaction.categoryId)
-                const isIncome = transaction.type === "income"
+            {/* Группированные транзакции по дням */}
+            {groupedTransactions.map(({ date, transactions }) => {
+              const dayTotal = transactions.reduce((sum, t) => {
+                return t.type === "income" ? sum + t.amount : sum - t.amount
+              }, 0)
 
-                return (
-                  <div
-                    key={transaction.id}
-                    onClick={() => handleTransactionClick(transaction)}
-                    className="group relative bg-white rounded-xl border border-gray-200 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200 overflow-hidden cursor-pointer active:scale-[0.99]">
-                    {/* Цветная левая граница-индикатор */}
-                    <div
-                      className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-200 group-hover:w-1.5 ${
-                        isIncome ? "bg-emerald-500" : "bg-red-500"
-                      }`}
-                    />
-
-                    <div className="p-4 pl-6">
-                      {/* Единая responsive структура */}
-                      <div className="flex items-center justify-between">
-                        {/* Левая часть: иконка + инфо */}
-                        <div className="flex items-center space-x-4 flex-1 min-w-0">
-                          {/* Иконка транзакции */}
-                          <div className="flex-shrink-0">
-                            <div
-                              className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                isIncome
-                                  ? "bg-emerald-100 text-emerald-600"
-                                  : "bg-red-100 text-red-600"
-                              }`}>
-                              {isIncome ? (
-                                <TrendingUp className="h-5 w-5" />
-                              ) : (
-                                <TrendingDown className="h-5 w-5" />
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Информация о транзакции */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <h4 className="font-semibold text-gray-900 truncate">
-                                {transaction.description}
-                              </h4>
-                              {/* Маленький индикатор категории */}
-                              <div
-                                className="w-3 h-3 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: category?.color ?? "#6B7280" }}
-                                title={category?.name ?? "Неизвестная категория"}
-                              />
-                            </div>
-                            <div className="flex items-center space-x-2 text-sm text-gray-500">
-                              <span className="truncate">
-                                {category?.name ?? "Неизвестная категория"}
-                              </span>
-                              <span className="hidden sm:inline">•</span>
-                              <span className="hidden sm:inline">
-                                {formatDate(transaction.date)}
-                              </span>
-                            </div>
-                            {/* Дата на мобильных */}
-                            <div className="sm:hidden text-xs text-gray-400 mt-1">
-                              {formatDate(transaction.date)}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Правая часть: сумма + действия */}
-                        <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
-                          {/* Сумма */}
-                          <div className="text-right">
-                            <div
-                              className={`font-bold text-lg ${
-                                isIncome ? "text-emerald-600" : "text-red-600"
-                              }`}>
-                              {formatAmountWithSign(transaction.amount, transaction.type)}
-                            </div>
-                          </div>
-
-                          {/* Элегантный индикатор для всех устройств */}
-                          <div className="flex items-center text-gray-300 group-hover:text-emerald-400 transition-colors duration-200">
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.5}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </div>
-                        </div>
+              return (
+                <div key={date} className="space-y-3">
+                  {/* Заголовок дня */}
+                  <div className="sticky top-0 z-10 bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{formatDate(date)}</h3>
+                        <p className="text-sm text-gray-500">
+                          {transactions.length}{" "}
+                          {transactions.length === 1 ? "операция" : "операций"}
+                        </p>
+                      </div>
+                      <div
+                        className={`font-semibold ${
+                          dayTotal >= 0 ? "text-emerald-600" : "text-red-600"
+                        }`}>
+                        {dayTotal >= 0 ? "+" : ""}
+                        {formatCurrency(Math.abs(dayTotal))}
                       </div>
                     </div>
                   </div>
-                )
-              })}
-            </div>
+
+                  {/* Транзакции дня */}
+                  <div className="space-y-3">
+                    {transactions.map((transaction) => {
+                      const category = getCategoryById(transaction.categoryId)
+                      const isIncome = transaction.type === "income"
+
+                      return (
+                        <div
+                          key={transaction.id}
+                          onClick={() => handleTransactionClick(transaction)}
+                          className="group relative bg-white rounded-xl border border-gray-200 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200 overflow-hidden cursor-pointer active:scale-[0.99]">
+                          {/* Цветная левая граница-индикатор */}
+                          <div
+                            className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-200 group-hover:w-1.5 ${
+                              isIncome ? "bg-emerald-500" : "bg-red-500"
+                            }`}
+                          />
+
+                          <div className="p-4 pl-6">
+                            {/* Единая responsive структура */}
+                            <div className="flex items-center justify-between">
+                              {/* Левая часть: иконка + инфо */}
+                              <div className="flex items-center space-x-4 flex-1 min-w-0">
+                                {/* Иконка транзакции */}
+                                <div className="flex-shrink-0">
+                                  <div
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                      isIncome
+                                        ? "bg-emerald-100 text-emerald-600"
+                                        : "bg-red-100 text-red-600"
+                                    }`}>
+                                    {isIncome ? (
+                                      <TrendingUp className="h-5 w-5" />
+                                    ) : (
+                                      <TrendingDown className="h-5 w-5" />
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Информация о транзакции */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <h4 className="font-semibold text-gray-900 truncate">
+                                      {transaction.description}
+                                    </h4>
+                                    {/* Маленький индикатор категории */}
+                                    <div
+                                      className="w-3 h-3 rounded-full flex-shrink-0"
+                                      style={{ backgroundColor: category?.color ?? "#6B7280" }}
+                                      title={category?.name ?? "Неизвестная категория"}
+                                    />
+                                  </div>
+                                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                                    <span className="truncate">
+                                      {category?.name ?? "Неизвестная категория"}
+                                    </span>
+                                    <span className="hidden sm:inline">•</span>
+                                    <span className="hidden sm:inline">
+                                      {formatDate(transaction.date)}
+                                    </span>
+                                  </div>
+                                  {/* Дата на мобильных */}
+                                  <div className="sm:hidden text-xs text-gray-400 mt-1">
+                                    {formatDate(transaction.date)}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Правая часть: сумма + действия */}
+                              <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
+                                {/* Сумма */}
+                                <div className="text-right">
+                                  <div
+                                    className={`font-bold text-lg ${
+                                      isIncome ? "text-emerald-600" : "text-red-600"
+                                    }`}>
+                                    {formatAmountWithSign(transaction.amount, transaction.type)}
+                                  </div>
+                                </div>
+
+                                {/* Элегантный индикатор для всех устройств */}
+                                <div className="flex items-center text-gray-300 group-hover:text-emerald-400 transition-colors duration-200">
+                                  <svg
+                                    className="w-5 h-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={1.5}
+                                      d="M9 5l7 7-7 7"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

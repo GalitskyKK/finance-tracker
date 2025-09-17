@@ -1,10 +1,11 @@
 import React, { useMemo } from "react"
-import { TrendingUp, TrendingDown, Wallet, Target, PiggyBank, Calendar, Award } from "lucide-react"
+import { TrendingUp, TrendingDown, Wallet, Target, Calendar, Home, Award } from "lucide-react"
 import { useTransactionFilterStore } from "@/store/transactionFilterStore"
 import { useTransactionStoreSupabase } from "@/store/transactionStoreSupabase"
 import { formatCurrency } from "@/utils/formatters"
 import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns"
 import { ru } from "date-fns/locale"
+import { PageHeader } from "@/components/ui/PageHeader"
 
 interface DashboardProps {
   className?: string
@@ -124,32 +125,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ className = "", onPageChan
 
   return (
     <div className={className}>
-      {/* Дружелюбный заголовок */}
-      <div className="mb-8">
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg">
-            <PiggyBank className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Добро пожаловать в KashKontrol!</h1>
-            <p className="text-gray-600 mt-1">
-              Ваш финансовый обзор за {format(new Date(), "MMMM yyyy", { locale: ru })}
-            </p>
-          </div>
-        </div>
-
-        {/* Мотивационное сообщение */}
-        <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4">
-          <div className="flex items-center space-x-2">
-            <Award className="h-5 w-5 text-emerald-600" />
-            <p className="text-emerald-800 font-medium">
-              {stats.totalBalance >= 0
-                ? "Отличная работа! Ваши финансы в порядке 💚"
-                : "Давайте вместе приведем финансы в порядок! 📈"}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Unified Header */}
+      <PageHeader
+        title="Главная"
+        subtitle={`Ваш финансовый обзор за ${format(new Date(), "MMMM yyyy", { locale: ru })}`}
+        description={
+          stats.totalBalance >= 0
+            ? "Отличная работа! Ваши финансы в порядке 💚 Продолжайте в том же духе и контролируйте расходы."
+            : "Давайте вместе приведем финансы в порядок! 📈 Начните с отслеживания ежедневных трат."
+        }
+        icon={<Home className="w-5 h-5 text-white" />}
+        collapsibleDescription={true}
+      />
 
       {/* Современные карточки метрик */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
