@@ -1,7 +1,7 @@
 {
-  "name": "finance-tracker",
+  "name": "kashkontrol",
   "private": true,
-  "version": "1.2.8-hotfix",
+  "version": "1.2.8",
   "type": "module",
   "scripts": {
     "dev": "vite",

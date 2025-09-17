@@ -130,8 +130,10 @@ export const AppWithMigration: React.FC = () => {
     isAuthenticated,
     user?.id, // Только ID пользователя, не весь объект
     authLoading,
-    isInitialized // Убираем isOnline чтобы не перезапускать при смене сети
-    // Убираем функции store - они могут пересоздаваться
+    isInitialized,
+    // Намеренно исключаем isOnline - не хотим переинициализировать при смене сети
+    isOnline,
+    user
   ])
 
   // ВРЕМЕННО ОТКЛЮЧЕНО: Автоматическая синхронизация при восстановлении сети

@@ -4,17 +4,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import App from "./App.tsx"
 import "./index.css"
 import { registerSW } from "virtual:pwa-register"
+import type { Transaction, Category } from "./types"
 // import "./utils/debugStorage" // Debug utils для localStorage
 
-console.log("🚨🚨🚨 FINANCE TRACKER v1.2.8-hotfix LOADING! 🚨🚨🚨")
-console.log("🚨 React version:", React.version)
-console.log("🚨 TIMESTAMP BUILD:", new Date().toISOString())
-alert("🚨 HOTFIX v1.2.8 ЗАГРУЗИЛСЯ! IndexedDB timing + debugStorage fix!")
+console.log("🚀 KashKontrol v1.2.8 starting...")
+console.log("⚡ Built with React", React.version)
 
 // Типы для debugStorage
 declare global {
   interface Window {
-    debugStorage: () => any
+    debugStorage: () => Promise<unknown>
     testTransactionSave: () => string
     clearStorage: () => string
     clearAllCaches: () => Promise<string>
@@ -24,8 +23,8 @@ declare global {
 
 // Минимальная версия debugStorage для диагностики
 if (typeof window !== "undefined") {
-  window.debugStorage = async () => {
-    console.log("🔥 debugStorage v2.0 called!")
+  window.debugStorage = async (): Promise<unknown> => {
+    console.log("🔍 Debug storage analysis...")
     try {
       // Проверяем localStorage
       const localTransactions = localStorage.getItem("finance-tracker-transactions")
@@ -39,7 +38,7 @@ if (typeof window !== "undefined") {
       // Retry механизм для IndexedDB (как в приложении)
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          console.log(`🔄 debugStorage: IndexedDB attempt ${attempt}/3`)
+          // Attempting IndexedDB connection
           const indexedDB = window.indexedDB
           if (indexedDB) {
             indexedDBSupported = true
@@ -48,7 +47,7 @@ if (typeof window !== "undefined") {
             await new Promise<void>((resolve) => {
               const freshRequest = indexedDB.open("finance-tracker-db", 2)
 
-              freshRequest.onsuccess = () => {
+              freshRequest.onsuccess = (): void => {
                 const db = freshRequest.result
 
                 try {
@@ -64,7 +63,7 @@ if (typeof window !== "undefined") {
                   const txStore = txTransaction.objectStore("transactions")
 
                   const countRequest = txStore.count()
-                  countRequest.onsuccess = () => {
+                  countRequest.onsuccess = (): void => {
                     indexedDBTransactions = countRequest.result
 
                     // Получаем количество категорий если есть
@@ -74,12 +73,12 @@ if (typeof window !== "undefined") {
                         const catStore = catTransaction.objectStore("categories")
                         const catCountRequest = catStore.count()
 
-                        catCountRequest.onsuccess = () => {
+                        catCountRequest.onsuccess = (): void => {
                           indexedDBCategories = catCountRequest.result
                           db.close()
                           resolve()
                         }
-                        catCountRequest.onerror = () => {
+                        catCountRequest.onerror = (): void => {
                           db.close()
                           resolve()
                         }
@@ -92,42 +91,39 @@ if (typeof window !== "undefined") {
                       resolve()
                     }
                   }
-                  countRequest.onerror = () => {
+                  countRequest.onerror = (): void => {
                     db.close()
                     resolve()
                   }
-                } catch (error) {
-                  console.log(`❌ debugStorage transaction error:`, error)
+                } catch (_error) {
+                  console.log(`❌ debugStorage transaction error:`, _error)
                   db.close()
                   resolve()
                 }
               }
 
-              freshRequest.onerror = () => {
+              freshRequest.onerror = (): void => {
                 console.log(`❌ debugStorage open error`)
                 resolve()
               }
 
-              freshRequest.onblocked = () => {
+              freshRequest.onblocked = (): void => {
                 console.log(`❌ debugStorage blocked`)
                 resolve()
               }
             })
 
-            console.log(`✅ debugStorage: IndexedDB successful on attempt ${attempt}`)
-            break // Успешно получили данные
+            // IndexedDB connection successful
+            break
           } else {
-            console.log(`❌ debugStorage: IndexedDB not available`)
+            // IndexedDB not available
             break
           }
-        } catch (error) {
-          console.log(`❌ debugStorage: Attempt ${attempt} failed:`, error)
+        } catch (_error) {
           if (attempt < 3) {
-            console.log(`⏳ debugStorage: Waiting 500ms before retry...`)
             await new Promise((resolve) => setTimeout(resolve, 500))
           } else {
             indexedDBSupported = false
-            console.log("❌ debugStorage: All IndexedDB attempts failed")
           }
         }
       }
@@ -136,8 +132,12 @@ if (typeof window !== "undefined") {
         localStorage: {
           transactions: !!localTransactions,
           categories: !!localCategories,
-          transactionsLength: localTransactions?.length || 0,
-          categoriesLength: localCategories?.length || 0
+          transactionsLength: localTransactions
+            ? (JSON.parse(localTransactions) as Transaction[]).length ?? 0
+            : 0,
+          categoriesLength: localCategories
+            ? (JSON.parse(localCategories) as Category[]).length ?? 0
+            : 0
         },
         indexedDB: {
           supported: indexedDBSupported,
@@ -146,7 +146,8 @@ if (typeof window !== "undefined") {
         },
         summary: {
           totalTransactions:
-            indexedDBTransactions || (localTransactions ? JSON.parse(localTransactions).length : 0),
+            indexedDBTransactions +
+            (localTransactions ? (JSON.parse(localTransactions) as Transaction[]).length ?? 0 : 0),
           dataLocation:
             indexedDBTransactions > 0 ? "IndexedDB" : localTransactions ? "localStorage" : "none"
         }
@@ -154,14 +155,14 @@ if (typeof window !== "undefined") {
 
       console.log("🔍 COMPLETE DEBUG:", result)
       return result
-    } catch (error) {
-      console.error("❌ debugStorage error:", error)
+    } catch (_error) {
+      console.error("❌ debugStorage error:", _error)
       return "❌ ошибка debugStorage"
     }
   }
 
   // Дополнительные функции
-  window.testTransactionSave = () => {
+  window.testTransactionSave = (): string => {
     try {
       const testData = [
         {
@@ -184,18 +185,18 @@ if (typeof window !== "undefined") {
     }
   }
 
-  window.clearStorage = () => {
+  window.clearStorage = (): string => {
     try {
       localStorage.removeItem("finance-tracker-transactions")
       localStorage.removeItem("finance-tracker-categories")
       return "✅ Storage cleared"
-    } catch (error) {
+    } catch (_error) {
       return "❌ Clear failed"
     }
   }
 
   // Принудительная очистка всех кэшей PWA
-  window.clearAllCaches = async () => {
+  window.clearAllCaches = async (): Promise<string> => {
     try {
       // Очищаем localStorage
       localStorage.clear()
@@ -222,14 +223,16 @@ if (typeof window !== "undefined") {
   }
 
   // Функция для тестирования store напрямую
-  window.testStore = () => {
+  window.testStore = (): string => {
     try {
-      // @ts-ignore - тестируем store напрямую
-      const store = window.__TRANSACTION_STORE__ || {}
+      // @ts-expect-error - тестируем store напрямую
+      const store =
+        (window as unknown as { __TRANSACTION_STORE__?: Record<string, unknown> })
+          .__TRANSACTION_STORE__ ?? {}
       console.log("Store methods:", Object.keys(store))
       return "Store test completed"
-    } catch (error) {
-      console.error("Store test error:", error)
+    } catch (_error) {
+      console.error("Store test error:", _error)
       return "Store test failed"
     }
   }
